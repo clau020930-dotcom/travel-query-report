@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>旅游搜索 Query 需求分析报告</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root { --bg: #0f1117; --card: #1a1d27; --card2: #22252f; --border: #2a2d37; --text: #e0e0e0; --text2: #9ca3af; --accent: #4285F4; --red: #EA4335; --green: #34A853; --yellow: #FBBC05; --purple: #8E24AA; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+  .container { display: flex; min-height: 100vh; }
+  /* Sidebar */
+  .sidebar { width: 240px; position: fixed; top: 0; left: 0; height: 100vh; overflow-y: auto; background: var(--card); border-right: 1px solid var(--border); padding: 20px 0; z-index: 100; }
+  .sidebar h3 { padding: 0 20px; margin-bottom: 12px; font-size: 13px; color: var(--text2); text-transform: uppercase; letter-spacing: 1px; }
+  .sidebar a { display: block; padding: 6px 20px; color: var(--text2); text-decoration: none; font-size: 13px; transition: all 0.2s; border-left: 3px solid transparent; }
+  .sidebar a:hover, .sidebar a.active { color: var(--text); background: var(--card2); border-left-color: var(--accent); }
+  .sidebar a.sub { padding-left: 36px; font-size: 12px; }
+  /* Main */
+  .main { margin-left: 240px; flex: 1; padding: 40px 60px; max-width: 960px; }
+  h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+  .subtitle { color: var(--text2); font-size: 14px; margin-bottom: 40px; }
+  h2 { font-size: 22px; font-weight: 600; margin: 48px 0 24px; padding-top: 24px; border-top: 1px solid var(--border); }
+  h2:first-of-type { border-top: none; margin-top: 0; }
+  h3 { font-size: 17px; font-weight: 600; margin: 32px 0 16px; color: var(--text); }
+  h4 { font-size: 15px; font-weight: 600; margin: 20px 0 12px; }
+  p { margin-bottom: 16px; color: var(--text); font-size: 15px; }
+  /* Cards */
+  .card { background: var(--card); border-radius: 10px; padding: 24px; margin-bottom: 20px; border: 1px solid var(--border); }
+  .card-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 16px; }
+  /* Finding cards */
+  .finding { background: var(--card); border-radius: 10px; padding: 20px 24px; margin-bottom: 12px; border: 1px solid var(--border); border-left: 4px solid var(--accent); }
+  .finding-title { font-weight: 700; font-size: 15px; margin-bottom: 8px; }
+  .finding-body { color: var(--text2); font-size: 14px; line-height: 1.8; }
+  .finding-body strong { color: var(--text); }
+  /* Tables */
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+  th { background: var(--card2); padding: 10px 12px; text-align: left; font-weight: 600; font-size: 13px; color: var(--text2); border-bottom: 2px solid var(--border); }
+  td { padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:hover td { background: rgba(66,133,244,0.05); }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+  /* Bars */
+  .bar { height: 8px; border-radius: 4px; display: inline-block; vertical-align: middle; min-width: 2px; }
+  .bar-container { display: flex; align-items: center; gap: 8px; }
+  .bar-label { font-size: 13px; color: var(--text2); min-width: 40px; text-align: right; }
+  /* Tags */
+  .tag { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+  .tag-p0 { background: rgba(234,67,53,0.2); color: #ff6b6b; }
+  .tag-p1 { background: rgba(251,188,5,0.2); color: #ffd43b; }
+  .tag-p2 { background: rgba(66,133,244,0.2); color: #74b9ff; }
+  .tag-p3 { background: rgba(158,158,158,0.2); color: #adb5bd; }
+  .tag-high { background: rgba(52,168,83,0.15); color: #69db7c; }
+  .tag-mid { background: rgba(251,188,5,0.15); color: #ffd43b; }
+  .tag-low { background: rgba(234,67,53,0.15); color: #ff6b6b; }
+  .tag-na { background: rgba(158,158,158,0.15); color: #adb5bd; }
+  /* Quote blocks */
+  .quote { background: var(--card2); border-left: 3px solid var(--accent); padding: 12px 16px; margin: 12px 0; border-radius: 0 8px 8px 0; font-size: 14px; color: var(--text2); }
+  .quote .q { font-style: italic; color: var(--text); }
+  /* Deep analysis card */
+  .deep-card { background: var(--card); border-radius: 10px; margin-bottom: 16px; border: 1px solid var(--border); overflow: hidden; }
+  .deep-header { padding: 16px 24px; border-left: 5px solid var(--accent); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+  .deep-header h4 { margin: 0; font-size: 16px; }
+  .deep-stats { font-size: 13px; color: var(--text2); }
+  .deep-body { padding: 0 24px 20px; }
+  .deep-section { margin-top: 16px; }
+  .deep-section-title { font-size: 13px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .case-list { list-style: none; }
+  .case-list li { padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+  .case-list li:last-child { border-bottom: none; }
+  /* Adversarial review */
+  .adv-card { background: var(--card); border-radius: 10px; margin-bottom: 16px; border: 1px solid var(--border); padding: 20px 24px; }
+  .adv-title { font-weight: 700; font-size: 15px; margin-bottom: 12px; }
+  .adv-row { display: flex; gap: 16px; margin-bottom: 8px; font-size: 14px; }
+  .adv-label { font-weight: 600; min-width: 50px; color: var(--text2); }
+  .adv-content { flex: 1; color: var(--text); line-height: 1.6; }
+  /* Action items */
+  .action-card { background: var(--card); border-radius: 10px; margin-bottom: 16px; border: 1px solid var(--border); padding: 20px 24px; }
+  .action-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .action-title { font-weight: 700; font-size: 15px; }
+  .action-body { font-size: 14px; color: var(--text2); line-height: 1.8; }
+  .action-body strong { color: var(--text); }
+  .action-metrics { display: flex; gap: 16px; margin-top: 12px; }
+  .action-metric { background: var(--card2); padding: 8px 14px; border-radius: 8px; font-size: 13px; }
+  .action-metric .label { color: var(--text2); }
+  .action-metric .value { font-weight: 700; color: var(--text); }
+  /* Color dot */
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+  /* Limitation list */
+  .lim-list { counter-reset: lim; list-style: none; }
+  .lim-list li { counter-increment: lim; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 14px; color: var(--text2); line-height: 1.7; }
+  .lim-list li::before { content: counter(lim) "."; font-weight: 700; color: var(--text); margin-right: 8px; }
+  /* Not-do section */
+  .notdo { background: var(--card); border-radius: 10px; padding: 20px 24px; margin-bottom: 12px; border: 1px solid var(--border); border-left: 4px solid var(--red); }
+  .notdo-title { font-weight: 700; font-size: 14px; margin-bottom: 6px; color: #ff6b6b; }
+  .notdo-body { font-size: 14px; color: var(--text2); line-height: 1.7; }
+  /* Metric grid */
+  .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 16px 0; }
+  .metric-box { background: var(--card2); padding: 16px; border-radius: 8px; text-align: center; }
+  .metric-value { font-size: 24px; font-weight: 700; }
+  .metric-label { font-size: 12px; color: var(--text2); margin-top: 4px; }
+  @media (max-width: 768px) { .sidebar { display: none; } .main { margin-left: 0; padding: 20px; } }
+</style>
+</head>
+<body>
+<div class="container">
+<!-- Sidebar -->
+<nav class="sidebar">
+  <h3>目录</h3>
+  <a href="#s0">0. 一页纸结论</a>
+  <a href="#s1">1. 数据说明</a>
+  <a href="#s2">2. 需求分布全景</a>
+  <a href="#s2-1" class="sub">2.1 L2 意图分布</a>
+  <a href="#s2-2" class="sub">2.2 置信度交叉分析</a>
+  <a href="#s3">3. 核心场景深度分析</a>
+  <a href="#s4">4. 问一问转化分析</a>
+  <a href="#s4-1" class="sub">4.1 各 L2 问一问效果</a>
+  <a href="#s4-2" class="sub">4.2 最好与最差场景</a>
+  <a href="#s5">5. 用户行为模式</a>
+  <a href="#s5-1" class="sub">5.1 搜索来源 × 需求</a>
+  <a href="#s5-2" class="sub">5.2 用户画像 × 需求</a>
+  <a href="#s5-3" class="sub">5.3 Query 长度分析</a>
+  <a href="#s6">6. 对抗审查</a>
+  <a href="#s7">7. 行动建议</a>
+</nav>
+<!-- Main content -->
+<div class="main">
+<h1>旅游搜索 Query 需求分析报告</h1>
+<div class="subtitle">数据来源：小红书搜索日志 | 时间范围：2026.06.25–07.01 | 数据类型：搜索 query（问一问曝光） | Session: 20260703_100000_travel</div>
+
+<!-- ===== 0. 一页纸结论 ===== -->
+<h2 id="s0">0. 一页纸结论</h2>
+<p style="margin-bottom:20px;color:var(--text2)">2,724 条旅游搜索 query 的全局账本：清洗后 2724 条 query 中旅游相关 2684 条（98.5%），非旅游 39 条（1.4%）。问一问整体曝光率 95.5%，点击率 12.6%（323/2563）。以下五个发现按数据置信度从高到低排列。</p>
+
+<div class="finding" style="border-left-color:#4285F4">
+  <div class="finding-title">1. 「XX旅游攻略」是绝对核心搜索模式（874 条，占 32.6%），但问一问点击率仅 12.6%</div>
+  <div class="finding-body">L2-1 综合旅游攻略以 874 条占据近三分之一搜索量。典型 query 如「杭州旅游攻略」「青岛游玩攻略三天两夜」。然而问一问在这个场景的 CTR 仅 12.6%（106/844），<strong>说明用户搜「攻略」时更倾向于浏览 UGC 笔记而非阅读 AI 摘要</strong>——这与购物场景中品牌探索型用户的行为模式一致。但这不意味着问一问无价值：攻略 query 的 CTR 虽低于平均，绝对点击量（106 次）仍是所有 L2 中最高的。</div>
+</div>
+
+<div class="finding" style="border-left-color:var(--green)">
+  <div class="finding-title">2. 签证/实用信息类 query 的问一问 CTR 显著高于攻略类（21.7%/20.0%/17.7%），是 AI 效果最好的场景</div>
+  <div class="finding-body">L2-10 签证与证件（CTR 21.7%）、L2-6 旅途餐饮（CTR 20.0%）、L2-9 自驾与租车（CTR 17.7%）——这些场景的共性是<strong>用户需要确定性答案</strong>（签证政策、能否携带物品、自驾规则），而非视觉化的灵感浏览。相比之下，L2-11 旅行装备与穿搭（CTR 5.0%）、L2-12 旅游文案与素材（CTR 7.4%）、L2-5 酒店与民宿（CTR 7.5%）的 CTR 最低，说明装备穿搭和文案素材类搜索是视觉驱动的，AI 摘要无法替代图文笔记。</div>
+</div>
+
+<div class="finding" style="border-left-color:var(--yellow)">
+  <div class="finding-title">3. 攻略→景点→酒店构成旅游决策链的三大支柱（合计 60.4%），但当前是独立搜索而非连贯流程</div>
+  <div class="finding-body">L2-1 综合攻略（32.6%）+ L2-4 景点推荐（14.9%）+ L2-5 酒店民宿（12.9%）合计占 60.4%。用户的真实需求是一条决策链：<strong>选目的地 → 找景点 → 订住宿</strong>，但当前每条搜索被独立处理，丢失了链路上下文。这与购物决策中「品类探索 → 品牌锁定 → 对比决策」的模式同构。</div>
+</div>
+
+<div class="finding" style="border-left-color:var(--purple)">
+  <div class="finding-title">4. 搜索词以短词为主（P50=8 字符），用户意图高度压缩，AI 理解和展开是关键</div>
+  <div class="finding-body">90% 的搜索词在 12 字符以内，大量 query 是「地名+攻略」「地名+好玩的」的极简模式。<strong>用户用最少的字表达模糊的意图，期望搜索系统展开为丰富的内容。</strong>这意味着 AI 理解短 query 背后的隐含需求（时间、预算、人群偏好）是提升体验的关键杠杆。</div>
+</div>
+
+<div class="finding" style="border-left-color:var(--red)">
+  <div class="finding-title">5. 87.4% 的问一问曝光未被点击——曝光率不是瓶颈，内容匹配度才是</div>
+  <div class="finding-body">问一问整体曝光率高达 95.5%（2563/2684），但点击率仅 12.6%。<strong>问题不在于展示不够，而在于展示了但用户不点。</strong>可能的原因：(1) 攻略类 query 用户更信任 UGC 笔记；(2) 问一问摘要缺乏图文吸引力；(3) 部分场景的 AI 回答精准度不够。CTR 的 L2 间分化（5.0%~21.7%）说明这是一个内容匹配度问题，而非系统性的产品问题。</div>
+</div>
+
+<!-- ===== 1. 数据说明 ===== -->
+<h2 id="s1">1. 数据说明</h2>
+<div class="card">
+  <h4>数据源与处理管线</h4>
+  <p>原始数据 3000 条小红书搜索 query（2026.06.25–07.01，7 天），经四阶段漏斗处理：</p>
+  <table>
+    <tr><th>阶段</th><th>操作</th><th>输入</th><th>输出</th><th>保留率</th></tr>
+    <tr><td>Phase 1 清洗</td><td>去除超长粘贴内容（>100字符）</td><td>3,000</td><td>2,997</td><td>99.9%</td></tr>
+    <tr><td>Phase 2 领域筛选</td><td>LLM 判断旅游相关性</td><td>2,997</td><td>2,724</td><td>90.9%</td></tr>
+    <tr><td>Phase 3 分类体系</td><td>自下而上构建 5L1/13L2</td><td colspan="2">100条验证集试标</td><td>100%覆盖</td></tr>
+    <tr><td>Phase 4 全量标注</td><td>14 batch × 7 agent 并行</td><td>2,724</td><td>2,685 旅游 + 39 非旅游</td><td>98.6%</td></tr>
+  </table>
+</div>
+<div class="card">
+  <h4>问一问关键指标口径</h4>
+  <p>本报告中「问一问曝光率」指该 query 触发了问一问展示的比例，「问一问 CTR」指在曝光的 query 中用户点击了问一问的比例。需注意：<strong>CTR 衡量的是 AI 摘要对用户的吸引力，不等于「AI 回答是否满足了用户需求」</strong>。用户可能点击后发现答案不满意，也可能不点击但通过扫读摘要获取了关键信息（「免点击满足」）。本数据无法区分这两种情况。</p>
+</div>
+<div class="card">
+  <h4>局限性</h4>
+  <ol class="lim-list">
+    <li><strong>LLM 自动标注非人工标注</strong>，抽样 20 条复核准确率约 95%（19/20），系统性偏差无法排除。特别是 L2-2 路线规划与 L2-9 自驾、L2-5 酒店与 L2-13 实用信息的边界存在灰色地带。</li>
+    <li><strong>单一入口类型</strong>：99%+ 的 query 来自 dqa_onebox_card 入口，样本仅覆盖问一问触达的搜索场景，不代表小红书全站旅游搜索需求。</li>
+    <li><strong>无 session 关联</strong>：每条 query 独立记录，无法重建用户的搜索序列和决策路径。报告中关于「决策链」的推断基于 query 模式归纳，非直接观测。</li>
+    <li><strong>7 天窗口的季节性偏差</strong>：6月底–7月初正值暑期出行规划高峰，攻略类搜索可能被高估。冬季数据中温泉/滑雪/春节出行可能改变 L2 分布。</li>
+    <li><strong>用户画像为平台级标签</strong>：性别、年龄段、城市等级为平台推断值，存在一定误差。且同一用户仅出现一条 query，无法分析用户级别的搜索行为模式。</li>
+  </ol>
+</div>
+
+<!-- ===== 2. 需求分布全景 ===== -->
+<h2 id="s2">2. 需求分布全景</h2>
+
+<h3 id="s2-1">2.1 L2 意图分布概览</h3>
+<p>下表按搜索量降序排列全部 13 个 L2 意图类型。前 3 个 L2 合计占 60.4%，构成旅游搜索的绝对主体。</p>
+<table>
+  <tr><th>排名</th><th>L2 意图类型</th><th>所属 L1</th><th class="num">数量</th><th class="num">占比</th><th class="num">累计</th><th>分布</th></tr>
+  <tr><td>1</td><td><span class="dot" style="background:#4285F4"></span>L2-1 综合旅游攻略</td><td>攻略与行程规划</td><td class="num">874</td><td class="num">32.6%</td><td class="num">32.6%</td><td><div class="bar" style="width:81.5px;background:#4285F4"></div></td></tr>
+<tr><td>2</td><td><span class="dot" style="background:#34A853"></span>L2-4 景点推荐与咨询</td><td>目的地与景点</td><td class="num">400</td><td class="num">14.9%</td><td class="num">47.5%</td><td><div class="bar" style="width:37.25px;background:#34A853"></div></td></tr>
+<tr><td>3</td><td><span class="dot" style="background:#FBBC05"></span>L2-5 酒店与民宿</td><td>住宿与餐饮</td><td class="num">347</td><td class="num">12.9%</td><td class="num">60.4%</td><td><div class="bar" style="width:32.25px;background:#FBBC05"></div></td></tr>
+<tr><td>4</td><td><span class="dot" style="background:#4285F4"></span>L2-2 路线与行程规划</td><td>攻略与行程规划</td><td class="num">221</td><td class="num">8.2%</td><td class="num">68.6%</td><td><div class="bar" style="width:20.5px;background:#4285F4"></div></td></tr>
+<tr><td>5</td><td><span class="dot" style="background:#4285F4"></span>L2-3 目的地推荐</td><td>攻略与行程规划</td><td class="num">150</td><td class="num">5.6%</td><td class="num">74.2%</td><td><div class="bar" style="width:14px;background:#4285F4"></div></td></tr>
+<tr><td>6</td><td><span class="dot" style="background:#8E24AA"></span>L2-10 签证与证件</td><td>出行准备与周边</td><td class="num">136</td><td class="num">5.1%</td><td class="num">79.3%</td><td><div class="bar" style="width:12.75px;background:#8E24AA"></div></td></tr>
+<tr><td>7</td><td><span class="dot" style="background:#EA4335"></span>L2-8 铁路与城市交通</td><td>交通出行</td><td class="num">124</td><td class="num">4.6%</td><td class="num">83.9%</td><td><div class="bar" style="width:11.5px;background:#EA4335"></div></td></tr>
+<tr><td>8</td><td><span class="dot" style="background:#8E24AA"></span>L2-13 旅行实用信息</td><td>出行准备与周边</td><td class="num">114</td><td class="num">4.2%</td><td class="num">88.2%</td><td><div class="bar" style="width:10.5px;background:#8E24AA"></div></td></tr>
+<tr><td>9</td><td><span class="dot" style="background:#8E24AA"></span>L2-12 旅游文案与素材</td><td>出行准备与周边</td><td class="num">74</td><td class="num">2.8%</td><td class="num">90.9%</td><td><div class="bar" style="width:7px;background:#8E24AA"></div></td></tr>
+<tr><td>10</td><td><span class="dot" style="background:#EA4335"></span>L2-9 自驾与租车</td><td>交通出行</td><td class="num">70</td><td class="num">2.6%</td><td class="num">93.5%</td><td><div class="bar" style="width:6.5px;background:#EA4335"></div></td></tr>
+<tr><td>11</td><td><span class="dot" style="background:#EA4335"></span>L2-7 航空出行</td><td>交通出行</td><td class="num">70</td><td class="num">2.6%</td><td class="num">96.1%</td><td><div class="bar" style="width:6.5px;background:#EA4335"></div></td></tr>
+<tr><td>12</td><td><span class="dot" style="background:#8E24AA"></span>L2-11 旅行装备与穿搭</td><td>出行准备与周边</td><td class="num">65</td><td class="num">2.4%</td><td class="num">98.5%</td><td><div class="bar" style="width:6px;background:#8E24AA"></div></td></tr>
+<tr><td>13</td><td><span class="dot" style="background:#FBBC05"></span>L2-6 旅途餐饮</td><td>住宿与餐饮</td><td class="num">39</td><td class="num">1.5%</td><td class="num">100.0%</td><td><div class="bar" style="width:3.75px;background:#FBBC05"></div></td></tr>
+</table>
+<p style="font-size:13px;color:var(--text2)">前三类意图合计占 60.4%，本质上是旅行决策链的三个阶段：先看攻略了解目的地（L2-1），再找具体景点（L2-4），再订住宿（L2-5）。</p>
+
+<h3 id="s2-2">2.2 置信度交叉分析</h3>
+<p>整体置信度分布：高 2413（88.6%）、中 300（11.0%）、低 10（0.4%）。以下为中/低置信度集中的 L2，反映分类体系中需要进一步明确边界的区域。</p>
+<table>
+  <tr><th>L2</th><th class="num">总量</th><th class="num">高</th><th class="num">中</th><th class="num">低</th><th class="num">非高占比</th><th>潜在边界问题</th></tr>
+  <tr><td>L2-1 综合旅游攻略</td><td class="num">874</td><td class="num">812</td><td class="num">61</td><td class="num">1</td><td class="num">7.1%</td><td style="font-size:13px;color:var(--text2)">与 L2-2/L2-4 的边界（攻略 vs 路线/景点）</td></tr>
+<tr><td>L2-4 景点推荐与咨询</td><td class="num">400</td><td class="num">359</td><td class="num">40</td><td class="num">1</td><td class="num">10.3%</td><td style="font-size:13px;color:var(--text2)">与 L2-1 的边界（景点 vs 攻略）</td></tr>
+<tr><td>L2-5 酒店与民宿</td><td class="num">347</td><td class="num">301</td><td class="num">46</td><td class="num">0</td><td class="num">13.3%</td><td style="font-size:13px;color:var(--text2)">与 L2-13 的边界（酒店推荐 vs 酒店杂项）</td></tr>
+<tr><td>L2-2 路线与行程规划</td><td class="num">221</td><td class="num">210</td><td class="num">11</td><td class="num">0</td><td class="num">5.0%</td><td style="font-size:13px;color:var(--text2)">与 L2-9 的边界（路线 vs 自驾）</td></tr>
+<tr><td>L2-3 目的地推荐</td><td class="num">150</td><td class="num">122</td><td class="num">23</td><td class="num">5</td><td class="num">18.7%</td><td style="font-size:13px;color:var(--text2)">—</td></tr>
+<tr><td>L2-10 签证与证件</td><td class="num">136</td><td class="num">132</td><td class="num">4</td><td class="num">0</td><td class="num">2.9%</td><td style="font-size:13px;color:var(--text2)">—</td></tr>
+<tr><td>L2-8 铁路与城市交通</td><td class="num">124</td><td class="num">106</td><td class="num">18</td><td class="num">0</td><td class="num">14.5%</td><td style="font-size:13px;color:var(--text2)">—</td></tr>
+<tr><td>L2-13 旅行实用信息</td><td class="num">114</td><td class="num">73</td><td class="num">38</td><td class="num">3</td><td class="num">36.0%</td><td style="font-size:13px;color:var(--text2)">兜底类，与 L2-5/L2-8 的边界</td></tr>
+<tr><td>L2-12 旅游文案与素材</td><td class="num">74</td><td class="num">48</td><td class="num">26</td><td class="num">0</td><td class="num">35.1%</td><td style="font-size:13px;color:var(--text2)">—</td></tr>
+<tr><td>L2-9 自驾与租车</td><td class="num">70</td><td class="num">69</td><td class="num">1</td><td class="num">0</td><td class="num">1.4%</td><td style="font-size:13px;color:var(--text2)">—</td></tr>
+<tr><td>L2-7 航空出行</td><td class="num">70</td><td class="num">67</td><td class="num">3</td><td class="num">0</td><td class="num">4.3%</td><td style="font-size:13px;color:var(--text2)">—</td></tr>
+<tr><td>L2-11 旅行装备与穿搭</td><td class="num">65</td><td class="num">59</td><td class="num">6</td><td class="num">0</td><td class="num">9.2%</td><td style="font-size:13px;color:var(--text2)">—</td></tr>
+<tr><td>L2-6 旅途餐饮</td><td class="num">39</td><td class="num">31</td><td class="num">8</td><td class="num">0</td><td class="num">20.5%</td><td style="font-size:13px;color:var(--text2)">—</td></tr>
+</table>
+
+<!-- ===== 3. 核心场景深度分析 ===== -->
+<h2 id="s3">3. 核心场景深度分析</h2>
+<p>对 Top 5 的 L2 类别进行深度分析：数据指标、典型 query 案例、用户意图解读、问一问效果、与其他 L2 的边界判断。</p>
+
+
+  <div class="deep-card">
+    <div class="deep-header" style="border-left-color:#4285F4">
+      <h4>L2-1 综合旅游攻略</h4>
+      <div class="deep-stats">874 条 · 32.6% · 攻略与行程规划</div>
+    </div>
+    <div class="deep-body">
+      <div class="metric-grid">
+        <div class="metric-box"><div class="metric-value" style="color:#4285F4">874</div><div class="metric-label">搜索量</div></div>
+        <div class="metric-box"><div class="metric-value">96.6%</div><div class="metric-label">问一问曝光率</div></div>
+        <div class="metric-box"><div class="metric-value">12.6%</div><div class="metric-label">问一问 CTR</div></div>
+        <div class="metric-box"><div class="metric-value">812</div><div class="metric-label">高置信度标注</div></div>
+      </div>
+      <div class="deep-section">
+        <div class="deep-section-title">典型 Query 案例</div>
+        <ul class="case-list"><li>「上海旅游攻略」</li><li>「青岛游玩攻略」</li><li>「7月武汉旅游攻略」</li><li>「崂山一日游攻略」</li><li>「韩国旅游攻略医美」</li></ul>
+      </div>
+      <div class="deep-section">
+        <div class="deep-section-title">用户意图解读</div>
+        <p style="font-size:14px;color:var(--text2)">用户已确定目的地，需要一站式信息聚合（路线、景点、住宿、美食）。「攻略」是一个模糊的元需求——用户不知道自己具体要什么，期望系统帮他组织。这是 AI 最有价值的切入点，但也是最难做好的：用户期望的是个性化的、考虑时间/预算/人群的定制方案，而非千篇一律的 Top 10 景点列表。</p>
+      </div>
+      <div class="deep-section">
+        <div class="deep-section-title">分类边界判断</div>
+        <p style="font-size:14px;color:var(--text2)">与 L2-2 的边界：含「攻略」→L2-1，含「路线/行程安排」→L2-2。与 L2-4 的边界：「XX旅游攻略」→L2-1，「XX好玩的地方/景点」→L2-4。灰色地带：「XX三天两夜」同时有攻略和路线规划的性质。</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="deep-card">
+    <div class="deep-header" style="border-left-color:#34A853">
+      <h4>L2-4 景点推荐与咨询</h4>
+      <div class="deep-stats">400 条 · 14.9% · 目的地与景点</div>
+    </div>
+    <div class="deep-body">
+      <div class="metric-grid">
+        <div class="metric-box"><div class="metric-value" style="color:#34A853">400</div><div class="metric-label">搜索量</div></div>
+        <div class="metric-box"><div class="metric-value">96.8%</div><div class="metric-label">问一问曝光率</div></div>
+        <div class="metric-box"><div class="metric-value">12.1%</div><div class="metric-label">问一问 CTR</div></div>
+        <div class="metric-box"><div class="metric-value">359</div><div class="metric-label">高置信度标注</div></div>
+      </div>
+      <div class="deep-section">
+        <div class="deep-section-title">典型 Query 案例</div>
+        <ul class="case-list"><li>「北京好玩的地方」</li><li>「上海好玩的地方」</li><li>「博白哪里好玩的地方推荐」</li><li>「重庆带娃儿耍一天的地方」</li><li>「南京咖啡打卡」</li></ul>
+      </div>
+      <div class="deep-section">
+        <div class="deep-section-title">用户意图解读</div>
+        <p style="font-size:14px;color:var(--text2)">用户已在特定城市/区域内，需要具体的景点推荐或决策参考（「值得去吗」「好玩的地方」）。与 L2-1 的区别在于粒度：L2-1 是全局规划，L2-4 是局部选择。用户此时已过了「去哪」的阶段，进入「去了之后干什么」。</p>
+      </div>
+      <div class="deep-section">
+        <div class="deep-section-title">分类边界判断</div>
+        <p style="font-size:14px;color:var(--text2)">与 L2-1 的边界：已在具体区域内找景点→L2-4，全局性旅游信息→L2-1。与 L2-3 的边界：有具体地点→L2-4，无地点求推荐→L2-3。</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="deep-card">
+    <div class="deep-header" style="border-left-color:#FBBC05">
+      <h4>L2-5 酒店与民宿</h4>
+      <div class="deep-stats">347 条 · 12.9% · 住宿与餐饮</div>
+    </div>
+    <div class="deep-body">
+      <div class="metric-grid">
+        <div class="metric-box"><div class="metric-value" style="color:#FBBC05">347</div><div class="metric-label">搜索量</div></div>
+        <div class="metric-box"><div class="metric-value">95.7%</div><div class="metric-label">问一问曝光率</div></div>
+        <div class="metric-box"><div class="metric-value">7.5%</div><div class="metric-label">问一问 CTR</div></div>
+        <div class="metric-box"><div class="metric-value">301</div><div class="metric-label">高置信度标注</div></div>
+      </div>
+      <div class="deep-section">
+        <div class="deep-section-title">典型 Query 案例</div>
+        <ul class="case-list"><li>「重庆酒店推荐」</li><li>「全季酒店」</li><li>「南京老山民宿」</li><li>「金泽大酒店」</li><li>「哪里订酒店便宜」</li></ul>
+      </div>
+      <div class="deep-section">
+        <div class="deep-section-title">用户意图解读</div>
+        <p style="font-size:14px;color:var(--text2)">住宿决策通常发生在攻略和景点之后。用户搜索模式分为两类：(1) 泛搜推荐（「XX酒店推荐」「平价民宿」）；(2) 特定酒店查询（酒店名搜索）。前者需要个性化推荐，后者需要信息聚合。</p>
+      </div>
+      <div class="deep-section">
+        <div class="deep-section-title">分类边界判断</div>
+        <p style="font-size:14px;color:var(--text2)">与 L2-13 的边界：酒店推荐/搜索/住宿体验→L2-5，酒店杂项问题（退房、物品）→L2-13。酒店名直接搜索归 L2-5。</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="deep-card">
+    <div class="deep-header" style="border-left-color:#4285F4">
+      <h4>L2-2 路线与行程规划</h4>
+      <div class="deep-stats">221 条 · 8.2% · 攻略与行程规划</div>
+    </div>
+    <div class="deep-body">
+      <div class="metric-grid">
+        <div class="metric-box"><div class="metric-value" style="color:#4285F4">221</div><div class="metric-label">搜索量</div></div>
+        <div class="metric-box"><div class="metric-value">91.9%</div><div class="metric-label">问一问曝光率</div></div>
+        <div class="metric-box"><div class="metric-value">14.3%</div><div class="metric-label">问一问 CTR</div></div>
+        <div class="metric-box"><div class="metric-value">210</div><div class="metric-label">高置信度标注</div></div>
+      </div>
+      <div class="deep-section">
+        <div class="deep-section-title">典型 Query 案例</div>
+        <ul class="case-list"><li>「北京旅游攻略路线」</li><li>「西安四天三夜旅游」</li><li>「定山路线推荐」</li><li>「惠州站出发的惠州旅游路线」</li><li>「大连、烟台、威海旅游攻略路线」</li></ul>
+      </div>
+      <div class="deep-section">
+        <div class="deep-section-title">用户意图解读</div>
+        <p style="font-size:14px;color:var(--text2)">用户需要具体的行程安排而非泛泛攻略。典型模式：「A到B最优路线」「X天游路线」「自驾游路线」。这类 query 有最高的结构化需求——用户期望的是可直接执行的分日行程表。</p>
+      </div>
+      <div class="deep-section">
+        <div class="deep-section-title">分类边界判断</div>
+        <p style="font-size:14px;color:var(--text2)">与 L2-9 的边界：泛路线（含非自驾）→L2-2，明确「自驾/租车」→L2-9。与 L2-1 的边界：有具体路线规划需求→L2-2，泛攻略→L2-1。</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="deep-card">
+    <div class="deep-header" style="border-left-color:#4285F4">
+      <h4>L2-3 目的地推荐</h4>
+      <div class="deep-stats">150 条 · 5.6% · 攻略与行程规划</div>
+    </div>
+    <div class="deep-body">
+      <div class="metric-grid">
+        <div class="metric-box"><div class="metric-value" style="color:#4285F4">150</div><div class="metric-label">搜索量</div></div>
+        <div class="metric-box"><div class="metric-value">97.3%</div><div class="metric-label">问一问曝光率</div></div>
+        <div class="metric-box"><div class="metric-value">8.9%</div><div class="metric-label">问一问 CTR</div></div>
+        <div class="metric-box"><div class="metric-value">122</div><div class="metric-label">高置信度标注</div></div>
+      </div>
+      <div class="deep-section">
+        <div class="deep-section-title">典型 Query 案例</div>
+        <ul class="case-list"><li>「7月去哪里旅游合适」</li><li>「旅游推荐城市」</li><li>「春节旅行」</li><li>「暑假适合带三岁半宝宝旅游的地方」</li><li>「孕妇去哪里旅游好」</li></ul>
+      </div>
+      <div class="deep-section">
+        <div class="deep-section-title">用户意图解读</div>
+        <p style="font-size:14px;color:var(--text2)">用户处于旅行决策的最早期，连目的地都没确定。典型约束条件：时间（「7月」）、人群（「亲子」「情侣」）、预算（「便宜」）、偏好（「避暑」「海边」）。这是 AI 对话最有优势的场景——通过追问约束条件收窄推荐范围。</p>
+      </div>
+      <div class="deep-section">
+        <div class="deep-section-title">分类边界判断</div>
+        <p style="font-size:14px;color:var(--text2)">与 L2-1 的边界：有明确目的地→L2-1，无目的地求推荐→L2-3。与 L2-4 的边界：无地点「去哪好」→L2-3，已有地点「哪里好玩」→L2-4。</p>
+      </div>
+    </div>
+  </div>
+
+<!-- ===== 4. 问一问转化分析 ===== -->
+<h2 id="s4">4. 问一问转化分析</h2>
+
+<div class="metric-grid">
+  <div class="metric-box"><div class="metric-value" style="color:var(--accent)">95.5%</div><div class="metric-label">整体曝光率</div></div>
+  <div class="metric-box"><div class="metric-value" style="color:var(--green)">12.6%</div><div class="metric-label">整体 CTR</div></div>
+  <div class="metric-box"><div class="metric-value">2563</div><div class="metric-label">曝光 query 数</div></div>
+  <div class="metric-box"><div class="metric-value">323</div><div class="metric-label">点击 query 数</div></div>
+</div>
+
+<h3 id="s4-1">4.1 各 L2 的问一问效果对比</h3>
+<p>下表按 CTR 降序排列。展示率普遍在 89%~98% 之间，差异不大；<strong>CTR 的 L2 间差异是核心发现</strong>，从 5.0% 到 21.7%，反映不同意图类型对 AI 摘要的接受度差异巨大。</p>
+<table>
+  <tr><th>L2 意图类型</th><th class="num">搜索量</th><th class="num">曝光率</th><th class="num">CTR</th><th class="num">点击数</th><th>CTR 效果判定</th></tr>
+  <tr><td><span class="dot" style="background:#8E24AA"></span>L2-10 签证与证件</td><td class="num">136</td><td class="num">94.9%</td><td class="num"><strong>21.7%</strong></td><td class="num">28</td><td><span class="tag tag-high">强——用户主动寻求确定性答案</span></td></tr>
+<tr><td><span class="dot" style="background:#FBBC05"></span>L2-6 旅途餐饮</td><td class="num">39</td><td class="num">89.7%</td><td class="num"><strong>20.0%</strong></td><td class="num">7</td><td><span class="tag tag-high">强——用户主动寻求确定性答案</span></td></tr>
+<tr><td><span class="dot" style="background:#EA4335"></span>L2-9 自驾与租车</td><td class="num">70</td><td class="num">88.6%</td><td class="num"><strong>17.7%</strong></td><td class="num">11</td><td><span class="tag tag-high">强——用户主动寻求确定性答案</span></td></tr>
+<tr><td><span class="dot" style="background:#8E24AA"></span>L2-13 旅行实用信息</td><td class="num">114</td><td class="num">94.7%</td><td class="num"><strong>17.6%</strong></td><td class="num">19</td><td><span class="tag tag-high">强——用户主动寻求确定性答案</span></td></tr>
+<tr><td><span class="dot" style="background:#EA4335"></span>L2-7 航空出行</td><td class="num">70</td><td class="num">97.1%</td><td class="num"><strong>16.2%</strong></td><td class="num">11</td><td><span class="tag tag-mid">中——有参考价值但非首选信息源</span></td></tr>
+<tr><td><span class="dot" style="background:#EA4335"></span>L2-8 铁路与城市交通</td><td class="num">124</td><td class="num">97.6%</td><td class="num"><strong>15.7%</strong></td><td class="num">19</td><td><span class="tag tag-mid">中——有参考价值但非首选信息源</span></td></tr>
+<tr><td><span class="dot" style="background:#4285F4"></span>L2-2 路线与行程规划</td><td class="num">221</td><td class="num">91.9%</td><td class="num"><strong>14.3%</strong></td><td class="num">29</td><td><span class="tag tag-mid">中——有参考价值但非首选信息源</span></td></tr>
+<tr><td><span class="dot" style="background:#4285F4"></span>L2-1 综合旅游攻略</td><td class="num">874</td><td class="num">96.6%</td><td class="num"><strong>12.6%</strong></td><td class="num">106</td><td><span class="tag tag-mid">中——有参考价值但非首选信息源</span></td></tr>
+<tr><td><span class="dot" style="background:#34A853"></span>L2-4 景点推荐与咨询</td><td class="num">400</td><td class="num">96.8%</td><td class="num"><strong>12.1%</strong></td><td class="num">47</td><td><span class="tag tag-mid">中——有参考价值但非首选信息源</span></td></tr>
+<tr><td><span class="dot" style="background:#4285F4"></span>L2-3 目的地推荐</td><td class="num">150</td><td class="num">97.3%</td><td class="num"><strong>8.9%</strong></td><td class="num">13</td><td><span class="tag tag-low">弱——用户更偏好 UGC 笔记</span></td></tr>
+<tr><td><span class="dot" style="background:#FBBC05"></span>L2-5 酒店与民宿</td><td class="num">347</td><td class="num">95.7%</td><td class="num"><strong>7.5%</strong></td><td class="num">25</td><td><span class="tag tag-low">弱——用户更偏好 UGC 笔记</span></td></tr>
+<tr><td><span class="dot" style="background:#8E24AA"></span>L2-12 旅游文案与素材</td><td class="num">74</td><td class="num">91.9%</td><td class="num"><strong>7.4%</strong></td><td class="num">5</td><td><span class="tag tag-low">弱——用户更偏好 UGC 笔记</span></td></tr>
+<tr><td><span class="dot" style="background:#8E24AA"></span>L2-11 旅行装备与穿搭</td><td class="num">65</td><td class="num">92.3%</td><td class="num"><strong>5.0%</strong></td><td class="num">3</td><td><span class="tag tag-na">极弱——AI 摘要几乎无吸引力</span></td></tr>
+</table>
+
+<h3 id="s4-2">4.2 最好与最差的问一问场景</h3>
+<div class="card">
+  <h4 style="color:var(--green)">CTR 最高的三个场景（用户需要确定性答案）</h4>
+  
+  <div class="quote"><strong>L2-10 签证与证件</strong>：CTR 21.7%（28/129），搜索量 136<br>
+  <span style="color:var(--text2)">用户搜索签证政策、交通规则、实用信息时，需要的是明确的、可信赖的答案。AI 摘要在这些场景中高度匹配需求。</span></div>
+  
+  <div class="quote"><strong>L2-6 旅途餐饮</strong>：CTR 20.0%（7/35），搜索量 39<br>
+  <span style="color:var(--text2)">用户搜索签证政策、交通规则、实用信息时，需要的是明确的、可信赖的答案。AI 摘要在这些场景中高度匹配需求。</span></div>
+  
+  <div class="quote"><strong>L2-9 自驾与租车</strong>：CTR 17.7%（11/62），搜索量 70<br>
+  <span style="color:var(--text2)">用户搜索签证政策、交通规则、实用信息时，需要的是明确的、可信赖的答案。AI 摘要在这些场景中高度匹配需求。</span></div>
+  
+</div>
+<div class="card">
+  <h4 style="color:var(--red)">CTR 最低的三个场景（用户偏好视觉化 UGC 内容）</h4>
+  
+  <div class="quote"><strong>L2-11 旅行装备与穿搭</strong>：CTR 5.0%（3/60），搜索量 65<br>
+  <span style="color:var(--text2)">用户搜索穿搭、文案、酒店推荐时，核心需求是「看图」「找灵感」「比较视觉效果」，AI 文字摘要无法满足这类视觉驱动的信息消费模式。</span></div>
+  
+  <div class="quote"><strong>L2-12 旅游文案与素材</strong>：CTR 7.4%（5/68），搜索量 74<br>
+  <span style="color:var(--text2)">用户搜索穿搭、文案、酒店推荐时，核心需求是「看图」「找灵感」「比较视觉效果」，AI 文字摘要无法满足这类视觉驱动的信息消费模式。</span></div>
+  
+  <div class="quote"><strong>L2-5 酒店与民宿</strong>：CTR 7.5%（25/332），搜索量 347<br>
+  <span style="color:var(--text2)">用户搜索穿搭、文案、酒店推荐时，核心需求是「看图」「找灵感」「比较视觉效果」，AI 文字摘要无法满足这类视觉驱动的信息消费模式。</span></div>
+  
+</div>
+
+<!-- ===== 5. 用户行为模式 ===== -->
+<h2 id="s5">5. 用户行为模式</h2>
+
+<h3 id="s5-1">5.1 搜索来源 × 需求类型</h3>
+<p>搜索来源（词来源字段）反映用户发起搜索的上下文。以下为 Top 搜索来源及其 L1 分布：</p>
+<table>
+  <tr><th>搜索来源</th><th class="num">数量</th><th class="num">占比</th><th class="num" style="font-size:11px">攻略与行</th><th class="num" style="font-size:11px">目的地与</th><th class="num" style="font-size:11px">住宿与餐</th><th class="num" style="font-size:11px">交通出行</th><th class="num" style="font-size:11px">出行准备</th></tr>
+  <tr><td style="font-size:13px">联想补全</td><td class="num">1620</td><td class="num">60.4%</td><td class="num" style="font-size:12px">851</td><td class="num" style="font-size:12px">248</td><td class="num" style="font-size:12px">177</td><td class="num" style="font-size:12px">155</td><td class="num" style="font-size:12px">189</td></tr>
+<tr><td style="font-size:13px">手动输入</td><td class="num">520</td><td class="num">19.4%</td><td class="num" style="font-size:12px">145</td><td class="num" style="font-size:12px">75</td><td class="num" style="font-size:12px">106</td><td class="num" style="font-size:12px">71</td><td class="num" style="font-size:12px">123</td></tr>
+<tr><td style="font-size:13px">历史搜索</td><td class="num">286</td><td class="num">10.7%</td><td class="num" style="font-size:12px">136</td><td class="num" style="font-size:12px">40</td><td class="num" style="font-size:12px">41</td><td class="num" style="font-size:12px">22</td><td class="num" style="font-size:12px">47</td></tr>
+<tr><td style="font-size:13px">UNRECOGNIZED</td><td class="num">57</td><td class="num">2.1%</td><td class="num" style="font-size:12px">31</td><td class="num" style="font-size:12px">7</td><td class="num" style="font-size:12px">8</td><td class="num" style="font-size:12px">5</td><td class="num" style="font-size:12px">6</td></tr>
+<tr><td style="font-size:13px">兴趣推荐</td><td class="num">50</td><td class="num">1.9%</td><td class="num" style="font-size:12px">22</td><td class="num" style="font-size:12px">10</td><td class="num" style="font-size:12px">14</td><td class="num" style="font-size:12px">1</td><td class="num" style="font-size:12px">3</td></tr>
+<tr><td style="font-size:13px">SEARCH_WORD_FROM_FILTER_OPTIONS</td><td class="num">28</td><td class="num">1.0%</td><td class="num" style="font-size:12px">17</td><td class="num" style="font-size:12px">3</td><td class="num" style="font-size:12px">3</td><td class="num" style="font-size:12px">3</td><td class="num" style="font-size:12px">2</td></tr>
+<tr><td style="font-size:13px">笔记内搜索</td><td class="num">26</td><td class="num">1.0%</td><td class="num" style="font-size:12px">9</td><td class="num" style="font-size:12px">2</td><td class="num" style="font-size:12px">6</td><td class="num" style="font-size:12px">3</td><td class="num" style="font-size:12px">6</td></tr>
+<tr><td style="font-size:13px">笔记文本推荐</td><td class="num">26</td><td class="num">1.0%</td><td class="num" style="font-size:12px">5</td><td class="num" style="font-size:12px">5</td><td class="num" style="font-size:12px">13</td><td class="num" style="font-size:12px">0</td><td class="num" style="font-size:12px">3</td></tr>
+</table>
+
+<h3 id="s5-2">5.2 用户画像 × 需求类型</h3>
+
+<h4>性别 × L1 分布</h4>
+<table>
+  <tr><th>L1</th><th class="num">女</th><th class="num">男</th><th class="num">未知</th><th class="num">女性占比</th></tr>
+  <tr><td><span class="dot" style="background:#4285F4"></span>攻略与行程规划</td><td class="num">1015</td><td class="num">0</td><td class="num">230</td><td class="num">81.5%</td></tr>
+<tr><td><span class="dot" style="background:#34A853"></span>目的地与景点</td><td class="num">322</td><td class="num">0</td><td class="num">78</td><td class="num">80.5%</td></tr>
+<tr><td><span class="dot" style="background:#FBBC05"></span>住宿与餐饮</td><td class="num">303</td><td class="num">1</td><td class="num">82</td><td class="num">78.5%</td></tr>
+<tr><td><span class="dot" style="background:#EA4335"></span>交通出行</td><td class="num">210</td><td class="num">0</td><td class="num">54</td><td class="num">79.5%</td></tr>
+<tr><td><span class="dot" style="background:#8E24AA"></span>出行准备与周边</td><td class="num">333</td><td class="num">0</td><td class="num">56</td><td class="num">85.6%</td></tr>
+</table>
+
+<h4>年龄段分布（Top 3 L1）</h4>
+<table>
+  <tr><th>年龄段</th><th class="num">攻略与行程规</th><th class="num">目的地与景点</th><th class="num">住宿与餐饮</th></tr>
+  <tr><td>a_<=12岁</td><td class="num">2</td><td class="num">2</td><td class="num">0</td></tr>
+<tr><td>b_13-18岁</td><td class="num">50</td><td class="num">24</td><td class="num">18</td></tr>
+<tr><td>c_19-24岁</td><td class="num">316</td><td class="num">117</td><td class="num">117</td></tr>
+<tr><td>d_25-29岁</td><td class="num">308</td><td class="num">105</td><td class="num">84</td></tr>
+<tr><td>e_30-34岁</td><td class="num">232</td><td class="num">57</td><td class="num">70</td></tr>
+<tr><td>f_35-39岁</td><td class="num">177</td><td class="num">44</td><td class="num">47</td></tr>
+<tr><td>g_40-44岁</td><td class="num">87</td><td class="num">22</td><td class="num">32</td></tr>
+<tr><td>h_45-49岁</td><td class="num">35</td><td class="num">6</td><td class="num">5</td></tr>
+<tr><td>i_50-59岁</td><td class="num">18</td><td class="num">9</td><td class="num">4</td></tr>
+<tr><td>j_60岁及以上</td><td class="num">20</td><td class="num">14</td><td class="num">9</td></tr>
+</table>
+
+<h3 id="s5-3">5.3 Query 长度与需求类型</h3>
+<table>
+  <tr><th>L1</th><th class="num">中位长度</th><th class="num">P90</th><th class="num">平均</th><th>解读</th></tr>
+  <tr><td><span class="dot" style="background:#4285F4"></span>攻略与行程规划</td><td class="num">7</td><td class="num">11</td><td class="num">8.0</td><td style="font-size:13px;color:var(--text2)">短——泛搜索为主</td></tr>
+<tr><td><span class="dot" style="background:#34A853"></span>目的地与景点</td><td class="num">8</td><td class="num">12</td><td class="num">8.5</td><td style="font-size:13px;color:var(--text2)">短——泛搜索为主</td></tr>
+<tr><td><span class="dot" style="background:#FBBC05"></span>住宿与餐饮</td><td class="num">9</td><td class="num">13</td><td class="num">9.1</td><td style="font-size:13px;color:var(--text2)">中等——含修饰条件</td></tr>
+<tr><td><span class="dot" style="background:#EA4335"></span>交通出行</td><td class="num">9</td><td class="num">14</td><td class="num">9.8</td><td style="font-size:13px;color:var(--text2)">中等——含修饰条件</td></tr>
+<tr><td><span class="dot" style="background:#8E24AA"></span>出行准备与周边</td><td class="num">8</td><td class="num">13</td><td class="num">8.9</td><td style="font-size:13px;color:var(--text2)">短——泛搜索为主</td></tr>
+</table>
+
+<!-- ===== 6. 对抗审查 ===== -->
+<h2 id="s6">6. 对抗审查：本报告最薄弱的五个环节</h2>
+<p style="margin-bottom:20px;color:var(--text2)">为确保读者对本报告结论的采信有充分依据，以下主动列出报告自身的主要薄弱点和对应的缓解方案。</p>
+
+<div class="adv-card">
+  <div class="adv-title">薄弱点一：「攻略是核心需求」可能是分类粒度的假象</div>
+  <div class="adv-row"><div class="adv-label">反驳：</div><div class="adv-content">L2-1 综合旅游攻略的 874 条中，大量是简单的「XX旅游攻略」模板搜索。这些 query 是否真正代表「行程规划需求」，还是仅仅是用户的惯性搜索入口（类似于搜「XX」进百科页面）？如果是后者，L2-1 的高占比反映的是搜索习惯而非需求结构。</div></div>
+  <div class="adv-row"><div class="adv-label">判断：</div><div class="adv-content"><strong>部分成立。</strong>需要区分「规划型」（如「青岛游玩攻略三天两夜」含时间约束）和「入口型」（如「杭州旅游攻略」纯泛搜索）。粗略估计后者占 L2-1 的 60% 以上。</div></div>
+  <div class="adv-row"><div class="adv-label">置信度：</div><div class="adv-content"><span class="tag tag-high">方向性判断——高</span> <span class="tag tag-mid">精确占比——中</span></div></div>
+</div>
+
+<div class="adv-card">
+  <div class="adv-title">薄弱点二：问一问 CTR 差异可能源于展示位置和样式差异，而非内容匹配度</div>
+  <div class="adv-row"><div class="adv-label">反驳：</div><div class="adv-content">不同 L2 的问一问展示可能有不同的 UI 样式、位置和内容长度。CTR 的差异可能是 UI 因素导致的，而非用户对不同意图类型的 AI 回答有不同的接受度。</div></div>
+  <div class="adv-row"><div class="adv-label">判断：</div><div class="adv-content"><strong>无法排除。</strong>本数据中不含展示样式信息。但 CTR 的 L2 间分化（5.0% vs 21.7%）幅度过大，单靠 UI 差异难以完全解释。跨 L2 的一致性模式（信息确认类 > 灵感浏览类）在购物场景中也成立，增强了「内容匹配度」解释的可信度。</div></div>
+  <div class="adv-row"><div class="adv-label">置信度：</div><div class="adv-content"><span class="tag tag-mid">CTR 排序——中</span> <span class="tag tag-low">因果归因——低</span></div></div>
+</div>
+
+<div class="adv-card">
+  <div class="adv-title">薄弱点三：LLM 标注的系统性偏差无法通过抽样检验完全排除</div>
+  <div class="adv-row"><div class="adv-label">反驳：</div><div class="adv-content">20 条抽样中 19 条正确（95%），但 20 条样本量太小。如果某个 L2 的错误率是 15% 而非全局的 5%，20 条抽样可能完全覆盖不到。特别是边界模糊的 L2（如 L2-2/L2-9、L2-5/L2-13）可能有更高的系统性错误率。</div></div>
+  <div class="adv-row"><div class="adv-label">判断：</div><div class="adv-content"><strong>成立。</strong>缓解方案：按 L2 分层抽样 + 双人独立标注一致性检验是更严格的验证方式。当前 95% 的准确率估计可能偏乐观。</div></div>
+  <div class="adv-row"><div class="adv-label">置信度：</div><div class="adv-content"><span class="tag tag-high">L2 分布排序——高</span> <span class="tag tag-mid">各 L2 绝对数字——中</span></div></div>
+</div>
+
+<div class="adv-card">
+  <div class="adv-title">薄弱点四：无 session 数据使「决策链」假设缺乏直接证据</div>
+  <div class="adv-row"><div class="adv-label">反驳：</div><div class="adv-content">报告中「攻略→景点→酒店」的决策链推断基于 query 模式归纳，但每条 query 独立记录，无法验证同一用户是否真的按这个顺序搜索。有可能用户只搜了攻略就结束了，并不进入景点和酒店阶段。</div></div>
+  <div class="adv-row"><div class="adv-label">判断：</div><div class="adv-content"><strong>成立。</strong>决策链假设需要 session 级数据验证。本报告将这一发现定位为「合理推断」而非「数据结论」。建议后续在有 session 数据的场景中验证。</div></div>
+  <div class="adv-row"><div class="adv-label">置信度：</div><div class="adv-content"><span class="tag tag-low">决策链存在——低（缺直接证据）</span></div></div>
+</div>
+
+<div class="adv-card">
+  <div class="adv-title">薄弱点五：暑期窗口可能导致攻略/目的地需求被高估</div>
+  <div class="adv-row"><div class="adv-label">反驳：</div><div class="adv-content">6月底–7月初是暑期出行规划高峰。在此窗口内，L2-1 综合攻略和 L2-3 目的地推荐的占比可能显著高于年均水平。冬季的温泉/滑雪、春节返乡、五一/十一长假可能呈现不同的 L2 分布。</div></div>
+  <div class="adv-row"><div class="adv-label">判断：</div><div class="adv-content"><strong>成立，但影响有限。</strong>攻略类作为最大需求的排序大概率不会因季节而改变，但精确占比可能波动 ±5~10%。交通和签证类需求在春节/暑期出境高峰可能上升。</div></div>
+  <div class="adv-row"><div class="adv-label">置信度：</div><div class="adv-content"><span class="tag tag-high">L2 排序——高</span> <span class="tag tag-mid">L2 精确占比——中</span></div></div>
+</div>
+
+<!-- ===== 7. 行动建议 ===== -->
+<h2 id="s7">7. 行动建议</h2>
+
+<div class="action-card">
+  <div class="action-header"><span class="tag tag-p0">P0</span><div class="action-title">优化攻略类 query 的问一问体验——从「文字摘要」升级为「结构化行程方案」</div></div>
+  <div class="action-body">
+    L2-1 占全部旅游搜索的 <strong>32.6%</strong>（874 条），但问一问 CTR 仅 12.6%。用户搜「XX旅游攻略」时期望的不是一段文字总结，而是<strong>可直接使用的分日行程表</strong>（景点排列、交通衔接、时间分配）。建议：(1) 检测到攻略类 query 时，输出结构化行程卡片（Day 1 / Day 2 / ...）；(2) 结合 UGC 笔记生成个性化行程推荐；(3) 提升问一问在攻略场景的视觉丰富度（嵌入景点图片和地图路线）。
+  </div>
+  <div class="action-metrics">
+    <div class="action-metric"><span class="label">影响面</span> <span class="value">874 条（32.6%）</span></div>
+    <div class="action-metric"><span class="label">当前 CTR</span> <span class="value">12.6%</span></div>
+    <div class="action-metric"><span class="label">置信度</span> <span class="value">高</span></div>
+  </div>
+</div>
+
+<div class="action-card">
+  <div class="action-header"><span class="tag tag-p1">P1</span><div class="action-title">提升景点/酒店推荐的个性化——从「XX有什么好玩的」到精准匹配</div></div>
+  <div class="action-body">
+    L2-4 景点推荐（400 条）+ L2-5 酒店民宿（347 条）合计 27.8%，但 query 多为泛问。建议：(1) 结合用户画像（年龄段、城市等级）和隐含偏好（亲子/情侣/独行）提供分层推荐；(2) 对比型 query（「XX酒店 vs YY酒店」虽然目前量不大，但这是高价值场景）自动生成对比表格；(3) 酒店推荐嵌入价格区间和用户评价摘要。
+  </div>
+  <div class="action-metrics">
+    <div class="action-metric"><span class="label">影响面</span> <span class="value">747 条（27.8%）</span></div>
+    <div class="action-metric"><span class="label">酒店 CTR</span> <span class="value">7.5%</span></div>
+    <div class="action-metric"><span class="label">置信度</span> <span class="value">高</span></div>
+  </div>
+</div>
+
+<div class="action-card">
+  <div class="action-header"><span class="tag tag-p2">P2</span><div class="action-title">签证/交通场景接入实时数据源——用户在这里最信任 AI</div></div>
+  <div class="action-body">
+    签证证件（CTR 21.7%）、旅途餐饮（CTR 20.0%）、自驾租车（CTR 17.7%）是问一问效果最好的三个场景。建议：(1) 签证场景对接最新签证政策数据，避免过时信息（错误的签证信息对信任度的伤害是致命的）；(2) 交通场景对接高铁时刻表和航班信息；(3) 餐饮场景结合 LBS 推荐附近美食笔记。
+  </div>
+  <div class="action-metrics">
+    <div class="action-metric"><span class="label">影响面</span> <span class="value">400 条（14.9%）</span></div>
+    <div class="action-metric"><span class="label">最高 CTR</span> <span class="value">21.7%</span></div>
+    <div class="action-metric"><span class="label">置信度</span> <span class="value">中</span></div>
+  </div>
+</div>
+
+<div class="action-card">
+  <div class="action-header"><span class="tag tag-p3">P3</span><div class="action-title">探索目的地推荐的多轮对话能力——但需验证需求是否真实</div></div>
+  <div class="action-body">
+    L2-3 目的地推荐仅 150 条（5.6%），但这可能是<strong>因为搜索框场景天然不适合多轮交互</strong>，而非用户没有这个需求。「7月去哪里旅游合适」「适合亲子的地方」等 query 是 AI 对话最有优势的场景——可以通过追问（预算？天数？偏好？）精准推荐。但 L2-3 占比低也可能反映用户确实不在搜索场景中寻求目的地推荐（而是在社交媒体、旅游社区中获得灵感）。
+  </div>
+  <div class="action-metrics">
+    <div class="action-metric"><span class="label">影响面</span> <span class="value">150 条（5.6%）</span></div>
+    <div class="action-metric"><span class="label">CTR</span> <span class="value">8.9%</span></div>
+    <div class="action-metric"><span class="label">置信度</span> <span class="value">低（需验证）</span></div>
+  </div>
+</div>
+
+<h3>不建议投入的方向</h3>
+
+<div class="notdo">
+  <div class="notdo-title">旅行装备/穿搭场景的 AI 摘要优化（L2-11，CTR 5.0%）</div>
+  <div class="notdo-body">用户搜索穿搭和装备时要的是「看图找灵感」，这是视觉驱动的行为。AI 文字摘要在这个场景中几乎无价值——用户需要的是好看的穿搭笔记图片，而非「海边建议穿白色连衣裙」的文字描述。投入 AI 优化的 ROI 极低。</div>
+</div>
+
+<div class="notdo">
+  <div class="notdo-title">旅游文案/素材场景的 AI 生成（L2-12，CTR 7.4%）</div>
+  <div class="notdo-body">用户搜索「海边文案」「旅游背景音乐」时，需求本质是内容创作素材，不是旅游信息获取。这个场景应归属于内容创作工具链，而非旅游 AI 助手。且搜索量仅 74 条（2.8%），不值得专项投入。</div>
+</div>
+
+<div class="notdo">
+  <div class="notdo-title">在无 session 数据的情况下做多轮对话引导</div>
+  <div class="notdo-body">报告中关于「决策链」的推断尚缺乏 session 级证据。在没有验证用户确实按「攻略→景点→酒店」路径搜索之前，贸然设计跨搜索的上下文继承功能，风险大于收益。建议先获取 session 数据验证决策链假设。</div>
+</div>
+
+<div class="card" style="margin-top:32px; border-left: 4px solid var(--accent);">
+  <h4>底线判断</h4>
+  <p>2684 条旅游搜索 query 中，<strong>问一问的首要瓶颈不是曝光率（95.5%），而是内容匹配度</strong>（CTR 12.6%）。信息确认类场景（签证、交通规则、实用信息）已经验证了 AI 摘要的价值（CTR 17~22%），攻略和推荐类场景的低 CTR 说明问一问需要从「文字摘要」升级为「结构化方案+视觉内容」。正确的路径是：先在 CTR 高的场景深耕（保证质量，建立信任），同时用结构化升级提升攻略场景的 CTR。不建议在 CTR 极低的视觉消费场景（穿搭、文案）投入 AI 优化。</p>
+</div>
+
+<div class="subtitle" style="margin-top:48px;text-align:center">报告生成时间：2026/7/3 11:19:09 | Session: 20260703_100000_travel</div>
+</div>
+</div>
+</body>
+</html>
