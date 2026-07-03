@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>旅游领域 Query 需求分析报告</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif; background: #f5f7fa; color: #333; line-height: 1.7; font-size: 15px; }
+
+  /* 布局 */
+  .page { display: flex; max-width: 1300px; margin: 0 auto; }
+  .toc { width: 220px; position: sticky; top: 0; height: 100vh; overflow-y: auto; padding: 24px 0 24px 16px; flex-shrink: 0; }
+  .toc-title { font-size: 13px; font-weight: 700; color: #999; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+  .toc a { display: block; padding: 5px 12px; font-size: 13px; color: #666; text-decoration: none; border-left: 2px solid transparent; margin-bottom: 2px; }
+  .toc a:hover, .toc a.active { color: #4285F4; border-left-color: #4285F4; background: #eef3ff; }
+  .toc a.toc-l1 { font-weight: 600; color: #333; }
+
+  .main { flex: 1; padding: 24px 32px; min-width: 0; }
+
+  h1 { font-size: 28px; margin-bottom: 4px; color: #1a1a1a; }
+  .subtitle { color: #888; margin-bottom: 28px; font-size: 13px; }
+
+  /* 章节 */
+  .section { margin-bottom: 40px; }
+  .section-title { font-size: 20px; font-weight: 700; color: #1a1a1a; margin-bottom: 20px; padding-bottom: 8px; border-bottom: 2px solid #4285F4; display: flex; align-items: center; gap: 8px; }
+  .section-num { background: #4285F4; color: white; width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; flex-shrink: 0; }
+
+  /* 卡片 */
+  .card { background: #fff; border-radius: 12px; padding: 24px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .card h2 { font-size: 17px; margin-bottom: 14px; color: #1a1a1a; }
+  .card h3 { font-size: 16px; margin-bottom: 12px; color: #1a1a1a; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .card h4 { font-size: 14px; font-weight: 600; color: #555; margin-bottom: 8px; }
+
+  /* 结论块 */
+  .conclusion-card { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #e0e0e0; border-radius: 12px; padding: 28px; margin-bottom: 20px; }
+  .conclusion-card h2 { color: white; margin-bottom: 20px; font-size: 18px; }
+  .conclusion-item { margin-bottom: 16px; padding-left: 16px; border-left: 3px solid rgba(255,255,255,0.2); }
+  .conclusion-item:last-child { margin-bottom: 0; }
+  .conclusion-item strong { color: #ffd700; font-size: 15px; }
+  .conclusion-item p { font-size: 14px; line-height: 1.7; color: #ccc; margin-top: 4px; }
+
+  /* 数据概览 */
+  .summary { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 20px; }
+  .stat { text-align: center; padding: 16px 8px; background: #fff; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .stat .num { font-size: 28px; font-weight: 700; color: #4285F4; }
+  .stat .label { font-size: 12px; color: #999; margin-top: 2px; }
+
+  /* 表格 */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { background: #f8f9fa; padding: 8px 10px; text-align: left; font-weight: 600; border-bottom: 2px solid #e0e0e0; font-size: 12px; color: #666; }
+  td { padding: 7px 10px; border-bottom: 1px solid #f0f0f0; }
+  tr:hover { background: #fafbfc; }
+  .bar { height: 14px; border-radius: 3px; display: inline-block; min-width: 4px; }
+
+  /* 饼图 */
+  .pie-container { display: flex; align-items: center; gap: 32px; margin: 12px 0; }
+  .pie-legend { flex: 1; }
+  .pie-legend-item { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: 13px; }
+  .pie-legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+  /* 深度分析 */
+  .deep-analysis { border-left: 4px solid #4285F4; }
+  .l2-badge { display: inline-block; padding: 2px 10px; border-radius: 4px; color: white; font-size: 12px; font-weight: 600; }
+  .l2-mini-badge { display: inline-block; padding: 1px 6px; border-radius: 3px; color: white; font-size: 11px; font-weight: 600; }
+  .count-badge { font-size: 13px; color: #999; font-weight: 400; }
+  .def { color: #666; font-size: 13px; margin-bottom: 16px; padding: 8px 12px; background: #f8f9fa; border-radius: 6px; }
+  .analysis-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 16px; }
+  .analysis-left, .analysis-right { min-width: 0; }
+
+  .case-block { display: flex; gap: 8px; margin-bottom: 8px; padding: 8px 12px; background: #f8f9fa; border-radius: 6px; border-left: 3px solid #4285F4; }
+  .case-num { background: #4285F4; color: white; width: 20px; height: 20px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; margin-top: 2px; }
+  .case-text { font-size: 13px; color: #333; line-height: 1.5; }
+
+  .pattern-item { display: flex; justify-content: space-between; align-items: center; padding: 4px 8px; background: #f0f4f8; border-radius: 4px; margin-bottom: 4px; font-size: 12px; }
+  .pattern-text { color: #333; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pattern-count { color: #888; font-weight: 600; margin-left: 8px; flex-shrink: 0; }
+
+  .conf-bar-wrap { display: flex; height: 8px; border-radius: 4px; overflow: hidden; margin: 4px 0; }
+  .conf-bar-high { background: #34A853; }
+  .conf-bar-mid { background: #FBBC05; }
+  .conf-bar-low { background: #EA4335; }
+  .conf-legend { font-size: 11px; color: #888; }
+  .conf-high { color: #34A853; font-weight: 600; }
+  .conf-low { color: #EA4335; font-weight: 600; }
+
+  .confusion-box { padding: 12px 16px; background: #fffbf0; border-radius: 6px; border-left: 3px solid #FBBC05; }
+  .confusion-box h4 { color: #b8860b; margin-bottom: 4px; }
+  .confusion-box p { font-size: 13px; color: #666; }
+
+  /* 多轮案例 */
+  .multi-turn-case { margin-bottom: 16px; border: 1px solid #e8e8e8; border-radius: 8px; overflow: hidden; }
+  .case-header { padding: 10px 16px; background: #f8f9fa; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .turn-item { padding: 8px 16px; border-bottom: 1px solid #f0f0f0; display: grid; grid-template-columns: 50px 140px 1fr; gap: 8px; align-items: start; }
+  .turn-item:last-child { border-bottom: none; }
+  .turn-num { font-size: 12px; font-weight: 600; color: #4285F4; }
+  .turn-time { font-size: 11px; color: #999; }
+  .turn-text { font-size: 13px; color: #333; }
+  .turn-text em { color: #999; }
+
+  /* 时间分布 */
+  .chart-container { display: flex; align-items: flex-end; gap: 2px; height: 140px; padding: 8px 0; }
+  .hour-bar-wrap, .date-bar-wrap { display: flex; flex-direction: column; align-items: center; flex: 1; }
+  .hour-bar, .date-bar { background: #4285F4; width: 100%; border-radius: 2px 2px 0 0; min-height: 2px; transition: height 0.3s; }
+  .hour-label, .date-label { font-size: 10px; color: #999; margin-top: 4px; text-align: center; }
+
+  /* 对抗审查 */
+  .audit-block { margin-bottom: 20px; padding: 20px; border: 1px solid #e8e8e8; border-radius: 8px; }
+  .audit-title { font-size: 15px; font-weight: 700; color: #1a1a1a; margin-bottom: 12px; }
+  .audit-section { margin-bottom: 10px; }
+  .audit-label { font-size: 12px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .audit-label.refute { color: #EA4335; }
+  .audit-label.judge { color: #4285F4; }
+  .audit-label.confidence { color: #34A853; }
+  .audit-text { font-size: 14px; color: #555; line-height: 1.6; }
+  .audit-text strong { color: #333; }
+
+  /* 行动建议 */
+  .action-block { margin-bottom: 16px; padding: 20px; border-radius: 8px; border-left: 4px solid #ccc; background: #fff; }
+  .action-block.p0 { border-left-color: #EA4335; background: #fff5f5; }
+  .action-block.p1 { border-left-color: #FF9800; background: #fff8f0; }
+  .action-block.p2 { border-left-color: #4285F4; background: #f0f4ff; }
+  .action-block.p3 { border-left-color: #9E9E9E; background: #f8f8f8; }
+  .priority-tag { display: inline-block; padding: 2px 10px; border-radius: 4px; color: white; font-size: 12px; font-weight: 700; margin-right: 8px; }
+  .priority-tag.p0 { background: #EA4335; }
+  .priority-tag.p1 { background: #FF9800; }
+  .priority-tag.p2 { background: #4285F4; }
+  .priority-tag.p3 { background: #9E9E9E; }
+  .action-title { font-size: 16px; font-weight: 700; color: #1a1a1a; margin-bottom: 8px; display: flex; align-items: center; }
+  .action-text { font-size: 14px; color: #555; line-height: 1.7; }
+  .action-text strong { color: #333; }
+
+  /* L2 模式块 */
+  .l2-pattern-block { margin-bottom: 12px; padding: 12px 16px; background: #f8f9fa; border-radius: 8px; }
+  .l2-pattern-block h4 { display: flex; align-items: center; gap: 6px; }
+  .pattern-examples-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 8px; }
+  .sub-label { font-size: 11px; color: #999; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .example-query { font-size: 12px; color: #555; padding: 4px 8px; background: white; border-radius: 4px; margin-bottom: 4px; border-left: 2px solid #ddd; }
+
+  /* 边界案例 */
+  .border-case { padding: 8px 12px; background: #f8f9fa; border-radius: 6px; margin-bottom: 8px; }
+  .border-note { font-size: 13px; font-weight: 600; color: #555; }
+  .border-query { font-size: 12px; color: #888; margin-top: 4px; }
+
+  /* 数据管线 */
+  .pipeline { display: flex; align-items: center; gap: 0; margin: 16px 0; flex-wrap: wrap; }
+  .pipeline-step { padding: 10px 16px; background: #fff; border: 1px solid #e0e0e0; text-align: center; position: relative; flex: 1; min-width: 120px; }
+  .pipeline-step:first-child { border-radius: 8px 0 0 8px; }
+  .pipeline-step:last-child { border-radius: 0 8px 8px 0; }
+  .pipeline-num { font-size: 22px; font-weight: 700; color: #4285F4; }
+  .pipeline-label { font-size: 11px; color: #999; }
+  .pipeline-arrow { color: #ccc; font-size: 18px; flex-shrink: 0; padding: 0 4px; }
+
+  .muted { color: #999; font-size: 13px; font-style: italic; }
+
+  .footer { text-align: center; color: #bbb; font-size: 12px; margin-top: 40px; padding: 20px 0; border-top: 1px solid #eee; }
+
+  @media (max-width: 900px) {
+    .page { flex-direction: column; }
+    .toc { display: none; }
+    .summary { grid-template-columns: repeat(3, 1fr); }
+    .analysis-grid { grid-template-columns: 1fr; }
+    .pattern-examples-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <!-- 左侧目录 -->
+  <nav class="toc">
+    <div class="toc-title">目录</div>
+    <a href="#sec0" class="toc-l1">0. 一页纸结论</a>
+    <a href="#sec1" class="toc-l1">1. 数据说明</a>
+    <a href="#sec2" class="toc-l1">2. 需求分布全景</a>
+    <a href="#sec2-1">2.1 L1 大类分布</a>
+    <a href="#sec2-2">2.2 L2 细分分布</a>
+    <a href="#sec2-3">2.3 置信度分析</a>
+    <a href="#sec3" class="toc-l1">3. 核心场景深度分析</a>
+    <a href="#sec4" class="toc-l1">4. 用户行为模式</a>
+    <a href="#sec4-1">4.1 单轮/多轮</a>
+    <a href="#sec4-2">4.2 多轮演进案例</a>
+    <a href="#sec4-3">4.3 时间分布</a>
+    <a href="#sec4-4">4.4 Query 长度</a>
+    <a href="#sec5" class="toc-l1">5. 高频 Query 模式</a>
+    <a href="#sec6" class="toc-l1">6. 对抗审查</a>
+    <a href="#sec7" class="toc-l1">7. 行动建议</a>
+  </nav>
+
+  <!-- 主内容 -->
+  <div class="main">
+    <h1>旅游领域 Query 需求分析报告</h1>
+    <p class="subtitle">数据来源: 点点 App 旅游场景 query | 时间范围: 2026.06.25 - 2026.07.01（7 天） | 样本: 4,035 sessions | 生成时间: 2026.07.02</p>
+
+    <!-- ===== 0. 一页纸结论 ===== -->
+    <div id="sec0" class="section">
+      <div class="conclusion-card">
+        <h2>0. 一页纸结论</h2>
+
+        <div class="conclusion-item">
+          <strong>1. 行程规划是绝对核心需求（41.2%），「综合行程规划」单项占 24.9%</strong>
+          <p>用户来点点做旅游最主要的事就是"帮我规划行程"。L2-1 综合行程规划以 846 条的绝对优势排名第一，远超第二名的景点推荐（601 条）。结合 L2-2 路线规划（237）和 L2-3 行程调整（103），行程规划大类合计 1,400 条。但需注意：L2-1 中部分 query 可能是简单的"XX攻略"类泛搜索，并非真正需要完整行程规划。</p>
+        </div>
+
+        <div class="conclusion-item">
+          <strong>2. 用户需求以单轮为主（90.6%），但多轮 session 展现出深度交互价值</strong>
+          <p>319 个多轮 session 中出现行程调整、追问细节、跨景点对比等深度交互模式。单轮比例高可能并非因为需求简单，而是当前多轮交互体验不够好——用户可能提完一个问题就离开了。如果产品能引导用户进入多轮对话（如行程调整场景），可能释放更多需求。</p>
+        </div>
+
+        <div class="conclusion-item">
+          <strong>3. 景点和住宿咨询是第二大需求块，合计近 30%</strong>
+          <p>L2-6 景点推荐（17.7%）+ L2-7 住宿推荐（12.1%）合计占比最高。值得注意的是 L2-7 住宿推荐中大量 query 以笔记 JSON 开头（用户在看民宿/酒店笔记时发起咨询），说明 UGC 内容消费与 AI 交互的衔接是高价值场景。</p>
+        </div>
+
+        <div class="conclusion-item">
+          <strong>4. 约 15.8% 为非旅游 query，反映领域边界的模糊性</strong>
+          <p>639 条被标注为非旅游，包括教育升学、体育赛事、追星行程、购物种草（非旅行目的）、闲聊创作等。这是 Phase 2 "宁多勿少"筛选策略的预期结果，已在分析中排除。但 15.8% 的噪声也意味着旅游场景的入口流量中有相当比例的需求未被精准路由。</p>
+        </div>
+
+        <div class="conclusion-item">
+          <strong>5. 大量 query 附带笔记/视频内容（约 129 条），UGC 消费场景是独特入口</strong>
+          <p>约 3.8% 的旅游 query 以 JSON 格式的笔记内容开头，说明用户在浏览小红书攻略笔记/视频时发起 AI 咨询。这集中在 L2-4（攻略内容理解）、L2-6（景点咨询）、L2-7（住宿咨询）三个类别。这一独特的"先看笔记再提问"模式是点点旅游场景的差异化能力——其他旅游工具很难复制这种 UGC 驱动的用户行为。</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 1. 数据说明 ===== -->
+    <div id="sec1" class="section">
+      <div class="section-title"><span class="section-num">1</span> 数据说明</div>
+
+      <div class="card">
+        <h2>样本构成与处理管线</h2>
+        <p style="margin-bottom:12px;font-size:14px;color:#555">数据来源于点点 App 旅游场景，覆盖 2026 年 6 月 25 日至 7 月 1 日共 7 天。原始数据 10,000 条记录经 4 阶段处理后得到 3,396 条旅游相关 session。</p>
+
+        <div class="pipeline">
+          <div class="pipeline-step"><div class="pipeline-num">10,000</div><div class="pipeline-label">原始记录</div></div>
+          <span class="pipeline-arrow">&rarr;</span>
+          <div class="pipeline-step"><div class="pipeline-num">7,856</div><div class="pipeline-label">清洗后</div></div>
+          <span class="pipeline-arrow">&rarr;</span>
+          <div class="pipeline-step"><div class="pipeline-num">4,035</div><div class="pipeline-label">旅游相关 session</div></div>
+          <span class="pipeline-arrow">&rarr;</span>
+          <div class="pipeline-step"><div class="pipeline-num">3,396</div><div class="pipeline-label">旅游 query</div></div>
+          <span class="pipeline-arrow">+</span>
+          <div class="pipeline-step" style="background:#f5f5f5"><div class="pipeline-num" style="color:#999">639</div><div class="pipeline-label">非旅游</div></div>
+        </div>
+
+        <table style="margin-top:16px">
+          <thead><tr><th>阶段</th><th>操作</th><th>输入</th><th>输出</th><th>说明</th></tr></thead>
+          <tbody>
+            <tr><td>Phase 1 清洗</td><td>去除系统模板</td><td>10,000 条</td><td>7,856 条</td><td>移除"帮我规划本地温泉3日游"(1,928) + "开始做攻略"(216)</td></tr>
+            <tr><td>Phase 2 筛选</td><td>领域语义判断</td><td>7,154 sessions</td><td>4,035 sessions</td><td>保留率 56.4%，LLM 判断"宁多勿少"</td></tr>
+            <tr><td>Phase 3 分类</td><td>分类体系构建</td><td>—</td><td>5 L1 / 13 L2</td><td>验证集覆盖率 94.2%</td></tr>
+            <tr><td>Phase 4 标注</td><td>全量 LLM 标注</td><td>4,035 sessions</td><td>3396 + 639</td><td>7 agent 并行，准确率约 95%</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h2>局限性</h2>
+        <ol style="font-size:14px;color:#555;padding-left:20px;line-height:2">
+          <li><strong>LLM 自动标注非人工标注</strong>，抽样 20 条复核准确率约 95%，存在约 5% 的分类偏差（主要集中在 L2 间的边界 case）。所有占比数据应视为方向性指标。</li>
+          <li><strong>非旅游 query 占 15.8%</strong>，说明 Phase 2 领域筛选存在 ~16% 的假阳性噪声。本报告所有"旅游 query"分析均已排除这部分数据。</li>
+          <li><strong>单一数据源</strong>（点点 App），不代表小红书全站旅游需求。点点的流量入口和用户群可能与搜索、主信息流有显著差异。</li>
+          <li><strong>7 天窗口受季节性影响</strong>。6 月底-7 月初正值暑期出行规划高峰，行程规划类需求可能被高估。需与其他季节对比验证。</li>
+          <li><strong>高频模式使用简单截断</strong>（前 40-50 字符），未做语义聚类。部分模式可能因表述差异被分散统计，实际集中度可能更高。</li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- ===== 2. 需求分布全景 ===== -->
+    <div id="sec2" class="section">
+      <div class="section-title"><span class="section-num">2</span> 需求分布全景</div>
+
+      <div class="summary">
+        <div class="stat"><div class="num">4,035</div><div class="label">总 Session 数</div></div>
+        <div class="stat"><div class="num">3,396</div><div class="label">旅游 Session</div></div>
+        <div class="stat"><div class="num">91%</div><div class="label">单轮占比</div></div>
+        <div class="stat"><div class="num">2756</div><div class="label">高置信标注</div></div>
+        <div class="stat"><div class="num">5 / 13</div><div class="label">L1 / L2 类别</div></div>
+      </div>
+
+      <div id="sec2-1" class="card">
+        <h2>2.1 L1 大类分布（旅游 query，n=3,396）</h2>
+        <div class="pie-container">
+          <div>
+            <svg width="200" height="200" viewBox="-1 -1 2 2" style="transform:rotate(-90deg)">
+              <path d="M 0 0 L 1 0 A 1 1 0 0 1 -0.8518174047723294 0.5238388196066931 Z" fill="#4285F4" />
+<path d="M 0 0 L -0.8518174047723294 0.5238388196066931 A 1 1 0 0 1 -0.5958386148150433 -0.8031041931750141 Z" fill="#34A853" />
+<path d="M 0 0 L -0.5958386148150433 -0.8031041931750141 A 1 1 0 0 1 0.34086082124161093 -0.9401137699994052 Z" fill="#FBBC05" />
+<path d="M 0 0 L 0.34086082124161093 -0.9401137699994052 A 1 1 0 0 1 0.845949886152173 -0.5332624026866375 Z" fill="#EA4335" />
+<path d="M 0 0 L 0.845949886152173 -0.5332624026866375 A 1 1 0 0 1 1 -1.133107779529596e-15 Z" fill="#8E24AA" />
+            </svg>
+          </div>
+          <div class="pie-legend">
+            <div class="pie-legend-item"><span class="pie-legend-dot" style="background:#4285F4"></span>行程规划: 1,400 (41.2%)</div>
+<div class="pie-legend-item"><span class="pie-legend-dot" style="background:#34A853"></span>目的地与景点: 802 (23.6%)</div>
+<div class="pie-legend-item"><span class="pie-legend-dot" style="background:#FBBC05"></span>吃住服务: 533 (15.7%)</div>
+<div class="pie-legend-item"><span class="pie-legend-dot" style="background:#EA4335"></span>交通出行: 357 (10.5%)</div>
+<div class="pie-legend-item"><span class="pie-legend-dot" style="background:#8E24AA"></span>出行准备: 304 (9.0%)</div>
+          </div>
+        </div>
+        <table>
+          <thead><tr><th>L1 大类</th><th>数量</th><th>占比</th><th>分布</th></tr></thead>
+          <tbody><tr><td style="color:#4285F4;font-weight:600">行程规划</td><td>1,400</td><td>41.2%</td><td><div class="bar" style="width:123.60000000000001px;background:#4285F4"></div></td></tr>
+<tr><td style="color:#34A853;font-weight:600">目的地与景点</td><td>802</td><td>23.6%</td><td><div class="bar" style="width:70.80000000000001px;background:#34A853"></div></td></tr>
+<tr><td style="color:#FBBC05;font-weight:600">吃住服务</td><td>533</td><td>15.7%</td><td><div class="bar" style="width:47.099999999999994px;background:#FBBC05"></div></td></tr>
+<tr><td style="color:#EA4335;font-weight:600">交通出行</td><td>357</td><td>10.5%</td><td><div class="bar" style="width:31.5px;background:#EA4335"></div></td></tr>
+<tr><td style="color:#8E24AA;font-weight:600">出行准备</td><td>304</td><td>9.0%</td><td><div class="bar" style="width:27px;background:#8E24AA"></div></td></tr></tbody>
+        </table>
+      </div>
+
+      <div id="sec2-2" class="card">
+        <h2>2.2 L2 细分类别分布</h2>
+        <table>
+          <thead><tr><th>L1</th><th>L2</th><th>名称</th><th>数量</th><th>占比</th><th>分布</th><th>置信度 高/低</th></tr></thead>
+          <tbody><tr>
+      <td rowspan="4" style="color:#4285F4;font-weight:600;vertical-align:top;border-right:3px solid #4285F4">行程规划</td>
+      <td>L2-1</td><td>综合行程规划</td><td>846</td><td>24.9%</td>
+      <td><div class="bar" style="width:74.69999999999999px;background:#4285F4"></div></td>
+      <td><span class="conf-high">85%</span> / <span class="conf-low">0%</span></td>
+    </tr>
+<tr>
+      
+      <td>L2-2</td><td>路线规划</td><td>237</td><td>7.0%</td>
+      <td><div class="bar" style="width:21px;background:#4285F4"></div></td>
+      <td><span class="conf-high">68%</span> / <span class="conf-low">1%</span></td>
+    </tr>
+<tr>
+      
+      <td>L2-4</td><td>攻略内容理解</td><td>214</td><td>6.3%</td>
+      <td><div class="bar" style="width:18.9px;background:#4285F4"></div></td>
+      <td><span class="conf-high">47%</span> / <span class="conf-low">6%</span></td>
+    </tr>
+<tr>
+      
+      <td>L2-3</td><td>行程调整优化</td><td>103</td><td>3.0%</td>
+      <td><div class="bar" style="width:9px;background:#4285F4"></div></td>
+      <td><span class="conf-high">71%</span> / <span class="conf-low">0%</span></td>
+    </tr>
+<tr>
+      <td rowspan="2" style="color:#34A853;font-weight:600;vertical-align:top;border-right:3px solid #34A853">目的地与景点</td>
+      <td>L2-6</td><td>景点推荐与咨询</td><td>601</td><td>17.7%</td>
+      <td><div class="bar" style="width:53.099999999999994px;background:#34A853"></div></td>
+      <td><span class="conf-high">54%</span> / <span class="conf-low">7%</span></td>
+    </tr>
+<tr>
+      
+      <td>L2-5</td><td>目的地推荐</td><td>201</td><td>5.9%</td>
+      <td><div class="bar" style="width:17.700000000000003px;background:#34A853"></div></td>
+      <td><span class="conf-high">72%</span> / <span class="conf-low">10%</span></td>
+    </tr>
+<tr>
+      <td rowspan="2" style="color:#FBBC05;font-weight:600;vertical-align:top;border-right:3px solid #FBBC05">吃住服务</td>
+      <td>L2-7</td><td>住宿推荐与咨询</td><td>412</td><td>12.1%</td>
+      <td><div class="bar" style="width:36.3px;background:#FBBC05"></div></td>
+      <td><span class="conf-high">53%</span> / <span class="conf-low">1%</span></td>
+    </tr>
+<tr>
+      
+      <td>L2-8</td><td>美食推荐</td><td>121</td><td>3.6%</td>
+      <td><div class="bar" style="width:10.8px;background:#FBBC05"></div></td>
+      <td><span class="conf-high">80%</span> / <span class="conf-low">0%</span></td>
+    </tr>
+<tr>
+      <td rowspan="2" style="color:#EA4335;font-weight:600;vertical-align:top;border-right:3px solid #EA4335">交通出行</td>
+      <td>L2-9</td><td>路线导航查询</td><td>219</td><td>6.4%</td>
+      <td><div class="bar" style="width:19.200000000000003px;background:#EA4335"></div></td>
+      <td><span class="conf-high">74%</span> / <span class="conf-low">5%</span></td>
+    </tr>
+<tr>
+      
+      <td>L2-10</td><td>交通票务信息</td><td>138</td><td>4.1%</td>
+      <td><div class="bar" style="width:12.299999999999999px;background:#EA4335"></div></td>
+      <td><span class="conf-high">71%</span> / <span class="conf-low">1%</span></td>
+    </tr>
+<tr>
+      <td rowspan="3" style="color:#8E24AA;font-weight:600;vertical-align:top;border-right:3px solid #8E24AA">出行准备</td>
+      <td>L2-13</td><td>旅行综合咨询</td><td>149</td><td>4.4%</td>
+      <td><div class="bar" style="width:13.200000000000001px;background:#8E24AA"></div></td>
+      <td><span class="conf-high">43%</span> / <span class="conf-low">2%</span></td>
+    </tr>
+<tr>
+      
+      <td>L2-11</td><td>签证与证件</td><td>108</td><td>3.2%</td>
+      <td><div class="bar" style="width:9.600000000000001px;background:#8E24AA"></div></td>
+      <td><span class="conf-high">90%</span> / <span class="conf-low">0%</span></td>
+    </tr>
+<tr>
+      
+      <td>L2-12</td><td>购物与消费</td><td>47</td><td>1.4%</td>
+      <td><div class="bar" style="width:4.199999999999999px;background:#8E24AA"></div></td>
+      <td><span class="conf-high">85%</span> / <span class="conf-low">0%</span></td>
+    </tr></tbody>
+        </table>
+      </div>
+
+      <div id="sec2-3" class="card">
+        <h2>2.3 置信度交叉分析</h2>
+        <p style="font-size:13px;color:#666;margin-bottom:12px">整体高置信标注占 68.3%，低置信仅 4.6%。低置信度集中的 L2 可能需要优化分类定义或标注 prompt。</p>
+        <table>
+          <thead><tr><th>L2 类别</th><th>高</th><th>中</th><th>低</th></tr></thead>
+          <tbody><tr><td>L2-1 综合行程规划</td><td>723 (85%)</td><td>123 (15%)</td><td>0 (0%)</td></tr>
+<tr><td>L2-6 景点推荐与咨询</td><td>326 (54%)</td><td>231 (38%)</td><td>44 (7%)</td></tr>
+<tr><td>L2-7 住宿推荐与咨询</td><td>220 (53%)</td><td>186 (45%)</td><td>6 (1%)</td></tr>
+<tr><td>L2-2 路线规划</td><td>161 (68%)</td><td>74 (31%)</td><td>2 (1%)</td></tr>
+<tr><td>L2-9 路线导航查询</td><td>161 (74%)</td><td>47 (21%)</td><td>11 (5%)</td></tr>
+<tr><td>L2-4 攻略内容理解</td><td>100 (47%)</td><td>101 (47%)</td><td>13 (6%)</td></tr>
+<tr><td>L2-5 目的地推荐</td><td>145 (72%)</td><td>36 (18%)</td><td>20 (10%)</td></tr>
+<tr><td>L2-13 旅行综合咨询</td><td>64 (43%)</td><td>82 (55%)</td><td>3 (2%)</td></tr>
+<tr><td>L2-10 交通票务信息</td><td>98 (71%)</td><td>39 (28%)</td><td>1 (1%)</td></tr>
+<tr><td>L2-8 美食推荐</td><td>97 (80%)</td><td>24 (20%)</td><td>0 (0%)</td></tr>
+<tr><td>L2-11 签证与证件</td><td>97 (90%)</td><td>11 (10%)</td><td>0 (0%)</td></tr>
+<tr><td>L2-3 行程调整优化</td><td>73 (71%)</td><td>30 (29%)</td><td>0 (0%)</td></tr>
+<tr><td>L2-12 购物与消费</td><td>40 (85%)</td><td>7 (15%)</td><td>0 (0%)</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===== 3. 核心场景深度分析 ===== -->
+    <div id="sec3" class="section">
+      <div class="section-title"><span class="section-num">3</span> 核心需求场景深度分析</div>
+      <p style="font-size:14px;color:#666;margin-bottom:16px">对 Top 5 的 L2 类别进行深度分析，展示典型 query、高频模式和易混淆边界。</p>
+      
+  <div class="card deep-analysis">
+    <h3><span class="l2-badge" style="background:#4285F4">L2-1</span> 综合行程规划 <span class="count-badge">846 条 · 24.9%</span></h3>
+    <p class="def">规划完整旅行行程，包括多日游攻略、全程安排</p>
+
+    <div class="analysis-grid">
+      <div class="analysis-left">
+        <h4>典型 Query 案例</h4>
+        <div class="case-block"><span class="case-num">1</span><span class="case-text">我今天下下午三点之前去神户一趟，从这个大阪然后三点之后再坐地铁去京都，然后去那个福建什么社可以吗？</span></div>
+<div class="case-block"><span class="case-num">2</span><span class="case-text">烟台旅游攻略</span></div>
+<div class="case-block"><span class="case-num">3</span><span class="case-text">两条线的住宿和具体行程写出来</span></div>
+<div class="case-block"><span class="case-num">4</span><span class="case-text">济州岛旅游攻略</span></div>
+<div class="case-block"><span class="case-num">5</span><span class="case-text">无锡出发去浙江海边城市游玩，5天的行程安排</span></div>
+      </div>
+      <div class="analysis-right">
+        <h4>高频模式</h4>
+        <div class="pattern-item"><span class="pattern-text">规划游玩路线</span><span class="pattern-count">6 次</span></div>
+<div class="pattern-item"><span class="pattern-text">规划行程路线</span><span class="pattern-count">2 次</span></div>
+<div class="pattern-item"><span class="pattern-text">日照旅游攻略</span><span class="pattern-count">2 次</span></div>
+<div class="pattern-item"><span class="pattern-text">我今天下下午三点之前去神户一趟，从这个大阪然后三点之后再坐地铁去京都，然后去那个福建什么社</span><span class="pattern-count">1 次</span></div>
+<div class="pattern-item"><span class="pattern-text">烟台旅游攻略</span><span class="pattern-count">1 次</span></div>
+        <h4 style="margin-top:16px">置信度</h4>
+        <div class="conf-bar-wrap">
+          <div class="conf-bar-high" style="width:85.46099290780141%"></div>
+          <div class="conf-bar-mid" style="width:14.539007092198581%"></div>
+          <div class="conf-bar-low" style="width:0%"></div>
+        </div>
+        <p class="conf-legend">高 723 · 中 123 · 低 0</p>
+      </div>
+    </div>
+
+    <div class="confusion-box">
+      <h4>易混淆边界</h4>
+      <p>与 L2-2（路线规划）边界：L2-1 包含吃住时间安排的完整行程，L2-2 侧重游玩路径顺序。与 L2-6（景点推荐）边界：「XX旅游攻略」类 query 可能仅需景点推荐而非完整行程规划。</p>
+    </div>
+  </div>
+
+  <div class="card deep-analysis">
+    <h3><span class="l2-badge" style="background:#34A853">L2-6</span> 景点推荐与咨询 <span class="count-badge">601 条 · 17.7%</span></h3>
+    <p class="def">已确定目的地，查询或推荐具体景点、活动、体验</p>
+
+    <div class="analysis-grid">
+      <div class="analysis-left">
+        <h4>典型 Query 案例</h4>
+        <div class="case-block"><span class="case-num">1</span><span class="case-text">帮我推荐一家三口自驾去长春带两个中年人60岁身体算比较健壮，想去一些没有过多人为建造的景点比如伪满皇宫等这类有历史价值或者像天然氧吧那种，还需要去一些比较有当地特色的人文历史自然景观比如长春电影厂，去一些买东西的地方比如新天地购物广场这有山等</span></div>
+<div class="case-block"><span class="case-num">2</span><span class="case-text">万峰湖分别有哪些码头？怎么游玩</span></div>
+<div class="case-block"><span class="case-num">3</span><span class="case-text">打算在加州去赤峰附近的草原去转一转，但是好像天气很差全是阴雨天，那么有没有其他的选择呢？从松原出发比如说前往吉林省附近长白山，如果不去长白山的话有什么其他的可以参观的地方吗</span></div>
+<div class="case-block"><span class="case-num">4</span><span class="case-text">北京可以看荷花的咖啡厅或者茶馆</span></div>
+<div class="case-block"><span class="case-num">5</span><span class="case-text">北京自然博物馆</span></div>
+      </div>
+      <div class="analysis-right">
+        <h4>高频模式</h4>
+        <div class="pattern-item"><span class="pattern-text">上海本地人周末都去哪儿玩</span><span class="pattern-count">3 次</span></div>
+<div class="pattern-item"><span class="pattern-text">成都看夜景去哪里更有氛围感</span><span class="pattern-count">2 次</span></div>
+<div class="pattern-item"><span class="pattern-text">推荐几个好玩的周末约会项目</span><span class="pattern-count">2 次</span></div>
+<div class="pattern-item"><span class="pattern-text">这里好玩吗</span><span class="pattern-count">2 次</span></div>
+<div class="pattern-item"><span class="pattern-text">北京北京环球度假区</span><span class="pattern-count">2 次</span></div>
+        <h4 style="margin-top:16px">置信度</h4>
+        <div class="conf-bar-wrap">
+          <div class="conf-bar-high" style="width:54.24292845257903%"></div>
+          <div class="conf-bar-mid" style="width:38.43594009983361%"></div>
+          <div class="conf-bar-low" style="width:7.321131447587355%"></div>
+        </div>
+        <p class="conf-legend">高 326 · 中 231 · 低 44</p>
+      </div>
+    </div>
+
+    <div class="confusion-box">
+      <h4>易混淆边界</h4>
+      <p>与 L2-5（目的地推荐）边界：L2-6 已确定目的地/城市，询问具体景点；L2-5 尚未确定去哪个城市。与 L2-1 边界：「XX有什么好玩的」如果仅需列举景点归 L2-6，如果需要安排行程归 L2-1。</p>
+    </div>
+  </div>
+
+  <div class="card deep-analysis">
+    <h3><span class="l2-badge" style="background:#FBBC05">L2-7</span> 住宿推荐与咨询 <span class="count-badge">412 条 · 12.1%</span></h3>
+    <p class="def">酒店/民宿的推荐、对比、评价、预订、选择</p>
+
+    <div class="analysis-grid">
+      <div class="analysis-left">
+        <h4>典型 Query 案例</h4>
+        <div class="case-block"><span class="case-num">1</span><span class="case-text">南京能看到绝美夜景的酒店</span></div>
+<div class="case-block"><span class="case-num">2</span><span class="case-text">2612开头是北京吗</span></div>
+<div class="case-block"><span class="case-num">3</span><span class="case-text">去溧阳游玩推荐酒店</span></div>
+<div class="case-block"><span class="case-num">4</span><span class="case-text">长隆横琴湾酒店适合什么人群</span></div>
+<div class="case-block"><span class="case-num">5</span><span class="case-text">张家界森林公园酒店订票靠谱吗</span></div>
+      </div>
+      <div class="analysis-right">
+        <h4>高频模式</h4>
+        <div class="pattern-item"><span class="pattern-text">介绍下这个酒店</span><span class="pattern-count">4 次</span></div>
+<div class="pattern-item"><span class="pattern-text">这个酒店叫什么</span><span class="pattern-count">2 次</span></div>
+<div class="pattern-item"><span class="pattern-text">这家酒店怎么样</span><span class="pattern-count">2 次</span></div>
+<div class="pattern-item"><span class="pattern-text">这家酒店叫什么</span><span class="pattern-count">2 次</span></div>
+<div class="pattern-item"><span class="pattern-text">南京能看到绝美夜景的酒店</span><span class="pattern-count">1 次</span></div>
+        <h4 style="margin-top:16px">置信度</h4>
+        <div class="conf-bar-wrap">
+          <div class="conf-bar-high" style="width:53.398058252427184%"></div>
+          <div class="conf-bar-mid" style="width:45.14563106796117%"></div>
+          <div class="conf-bar-low" style="width:1.4563106796116505%"></div>
+        </div>
+        <p class="conf-legend">高 220 · 中 186 · 低 6</p>
+      </div>
+    </div>
+
+    <div class="confusion-box">
+      <h4>易混淆边界</h4>
+      <p>与 L2-1（综合行程规划）边界：如果住宿只是行程的一部分，归 L2-1；如果整个 query 核心是找酒店/对比酒店，归 L2-7。与 L2-8（美食推荐）无交集。</p>
+    </div>
+  </div>
+
+  <div class="card deep-analysis">
+    <h3><span class="l2-badge" style="background:#4285F4">L2-2</span> 路线规划 <span class="count-badge">237 条 · 7.0%</span></h3>
+    <p class="def">规划具体游玩路线/路径顺序（非交通导航）</p>
+
+    <div class="analysis-grid">
+      <div class="analysis-left">
+        <h4>典型 Query 案例</h4>
+        <div class="case-block"><span class="case-num">1</span><span class="case-text">7.11-7.19 长沙到延吉、长白山、哈尔滨、伊春的路线安排</span></div>
+<div class="case-block"><span class="case-num">2</span><span class="case-text">住在中山区东港商务区，天气小雨，想在一天内逛完中山路和东港，上午九十点出门，中午回来睡个午觉，下午两点再出门，晚上可以玩到七八点，citywalk➕美食，好吃又好逛，出行可以是公交和地铁，请安排合适内容</span></div>
+<div class="case-block"><span class="case-num">3</span><span class="case-text">路线跟住宿推荐</span></div>
+<div class="case-block"><span class="case-num">4</span><span class="case-text">比较中意第一个路线，我想在其中一个城市短租一个小院，可以停车，遛猫遛狗，感受慢生活，大概半个月到一个月，推荐哪个城市，为什么</span></div>
+<div class="case-block"><span class="case-num">5</span><span class="case-text">湛江有烟火气的美食路线推荐</span></div>
+      </div>
+      <div class="analysis-right">
+        <h4>高频模式</h4>
+        <div class="pattern-item"><span class="pattern-text">规划游玩路线</span><span class="pattern-count">5 次</span></div>
+<div class="pattern-item"><span class="pattern-text">附近适合散步的小众路线</span><span class="pattern-count">4 次</span></div>
+<div class="pattern-item"><span class="pattern-text">北京小众的Citywalk路线</span><span class="pattern-count">2 次</span></div>
+<div class="pattern-item"><span class="pattern-text">规划这条路线</span><span class="pattern-count">2 次</span></div>
+<div class="pattern-item"><span class="pattern-text">从西安钟楼出发一日逛吃路线</span><span class="pattern-count">2 次</span></div>
+        <h4 style="margin-top:16px">置信度</h4>
+        <div class="conf-bar-wrap">
+          <div class="conf-bar-high" style="width:67.9324894514768%"></div>
+          <div class="conf-bar-mid" style="width:31.223628691983123%"></div>
+          <div class="conf-bar-low" style="width:0.8438818565400843%"></div>
+        </div>
+        <p class="conf-legend">高 161 · 中 74 · 低 2</p>
+      </div>
+    </div>
+
+    <div class="confusion-box">
+      <h4>易混淆边界</h4>
+      <p>与 L2-1（综合行程规划）边界：L2-2 不包含吃住安排，仅关注游玩景点的先后顺序。与 L2-9（路线导航）边界：L2-2 侧重"玩的路线"，L2-9 侧重"交通怎么走"。</p>
+    </div>
+  </div>
+
+  <div class="card deep-analysis">
+    <h3><span class="l2-badge" style="background:#EA4335">L2-9</span> 路线导航查询 <span class="count-badge">219 条 · 6.4%</span></h3>
+    <p class="def">从A到B怎么走、距离、时间、交通方式选择</p>
+
+    <div class="analysis-grid">
+      <div class="analysis-left">
+        <h4>典型 Query 案例</h4>
+        <div class="case-block"><span class="case-num">1</span><span class="case-text">从庐山风景区索道下山再去九江站西门也就才三更，时间更少了是吗</span></div>
+<div class="case-block"><span class="case-num">2</span><span class="case-text">南澳岛距离万象城广州西岸有多远</span></div>
+<div class="case-block"><span class="case-num">3</span><span class="case-text">双月湾离哪个高铁站最近</span></div>
+<div class="case-block"><span class="case-num">4</span><span class="case-text">杭州到贵州火车多久</span></div>
+<div class="case-block"><span class="case-num">5</span><span class="case-text">在大理火车站去沙溪怎么去，推荐下性价比高的住宿</span></div>
+      </div>
+      <div class="analysis-right">
+        <h4>高频模式</h4>
+        <div class="pattern-item"><span class="pattern-text">从庐山风景区索道下山再去九江站西门也就才三更，时间更少了是吗</span><span class="pattern-count">1 次</span></div>
+<div class="pattern-item"><span class="pattern-text">南澳岛距离万象城广州西岸有多远</span><span class="pattern-count">1 次</span></div>
+<div class="pattern-item"><span class="pattern-text">双月湾离哪个高铁站最近</span><span class="pattern-count">1 次</span></div>
+<div class="pattern-item"><span class="pattern-text">杭州到贵州火车多久</span><span class="pattern-count">1 次</span></div>
+<div class="pattern-item"><span class="pattern-text">在大理火车站去沙溪怎么去，推荐下性价比高的住宿</span><span class="pattern-count">1 次</span></div>
+        <h4 style="margin-top:16px">置信度</h4>
+        <div class="conf-bar-wrap">
+          <div class="conf-bar-high" style="width:73.51598173515981%"></div>
+          <div class="conf-bar-mid" style="width:21.461187214611872%"></div>
+          <div class="conf-bar-low" style="width:5.0228310502283104%"></div>
+        </div>
+        <p class="conf-legend">高 161 · 中 47 · 低 11</p>
+      </div>
+    </div>
+
+    <div class="confusion-box">
+      <h4>易混淆边界</h4>
+      <p>无显著混淆情况</p>
+    </div>
+  </div>
+    </div>
+
+    <!-- ===== 4. 用户行为模式 ===== -->
+    <div id="sec4" class="section">
+      <div class="section-title"><span class="section-num">4</span> 用户行为模式分析</div>
+
+      <div id="sec4-1" class="card">
+        <h2>4.1 单轮/多轮对话分布</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+          <div>
+            <p style="font-size:14px;color:#555;margin-bottom:12px">旅游 session 中 <strong>90.6%</strong> 为单轮对话，仅 <strong>9.4%</strong> 为多轮。</p>
+            <table>
+              <thead><tr><th>轮次</th><th>数量</th><th>占多轮比</th></tr></thead>
+              <tbody><tr><td>2 轮</td><td>266</td><td>83.4%</td></tr>
+<tr><td>3 轮</td><td>37</td><td>11.6%</td></tr>
+<tr><td>4 轮</td><td>14</td><td>4.4%</td></tr>
+<tr><td>5 轮</td><td>1</td><td>0.3%</td></tr>
+<tr><td>6 轮</td><td>1</td><td>0.3%</td></tr></tbody>
+            </table>
+          </div>
+          <div>
+            <p style="font-size:14px;color:#555;margin-bottom:8px"><strong>解读</strong></p>
+            <p style="font-size:13px;color:#666;line-height:1.7">单轮比例高有两种可能解释：(a) 旅游需求本身以一次性提问为主——用户只需一个攻略/推荐即可；(b) 点点当前的对话体验不足以引导用户进入多轮交互。从多轮 session 的内容看，存在明确的行程调整、追问细节等深度交互需求，说明至少部分用户有多轮交互意愿。L2-3（行程调整）仅占 3.0%，可能正是多轮引导不足导致的需求抑制。</p>
+          </div>
+        </div>
+      </div>
+
+      <div id="sec4-2" class="card">
+        <h2>4.2 多轮 Session 演进案例</h2>
+        <p style="font-size:13px;color:#666;margin-bottom:12px">以下展示 5 个有代表性的多轮 session，展示 query 间的意图演进模式。</p>
+        <div class="multi-turn-case">
+    <div class="case-header"><span class="l2-badge" style="background:#FBBC05">L2-7</span> 住宿推荐与咨询 · 6 轮对话</div>
+    <div class="turn-item">
+      <span class="turn-num">第1轮</span>
+      <span class="turn-time">2026-06-28 01:12:49</span>
+      <div class="turn-text">我问你一条，你说沈阳最繁华的酒店五星级大酒店是不是康莱德万豪新世界，沈阳最好的商场，万象城嘉里城，还有K11，包括那些中介，太原街沈阳站，再包括三甲医院沈阳医科大，沈阳陆军总医院在哪儿呢，你回答我，你回答我在哪呢？你能不能超越你浑南的小小老破学校，能能能不能超越市中心能不能</div>
+    </div>
+<div class="turn-item">
+      <span class="turn-num">第2轮</span>
+      <span class="turn-time">2026-06-28 09:40:13</span>
+      <div class="turn-text">几百年了，改变了吗？北京四合院是不是清朝留下来的，现在改变了吗？如果按你得意思说，现在应该一文不值</div>
+    </div>
+<div class="turn-item">
+      <span class="turn-num">第3轮</span>
+      <span class="turn-time">2026-06-28 15:29:32</span>
+      <div class="turn-text">我告诉你我去年世界杯我买的卡那个塞尔维亚和喀麦隆3:3平知道不，当时我中过一注3:3平去年所以我认为今年肯定有3:3平知道吧，当时我因为法国和挪威赢平输都是晋级所以说我认为他俩给我们赢平，当时我印巴因为吧大家伙都得认为法国和挪威都能进球一人特别多，所以我打了一个擦边球我认为他俩只能踢0:0平，因为为什么是平局呢因为法国不可能让挪威队拿到小组第一知道吧这是我认为所以他俩只能踢平</div>
+    </div>
+<div class="turn-item">
+      <span class="turn-num">第4轮</span>
+      <span class="turn-time">2026-06-28 18:32:30</span>
+      <div class="turn-text">你哪来的不确定性，你世界杯都将近发展100年了，听懂啥意思没？传统的就那八个队夺冠吗？还不确定性，你来回来转来转去不就是八个对儿夺冠吗？你那48个对儿，那40个对儿都是摆设，说白了夺冠就那八个对儿，大家伙都能看明白，知道不？西班牙葡萄牙，荷兰，英格兰，巴西知道吧，还西还有那个德国知道吧，不就这几个队儿吗？荷兰，你还有别的队儿吗？说白了你哪个队儿还能夺冠呢？你怎么你你你日本能夺冠呢，你韩国能能夺冠呢...</div>
+    </div>
+<div class="turn-item">
+      <span class="turn-num">第5轮</span>
+      <span class="turn-time">2026-06-29 00:47:58</span>
+      <div class="turn-text">我跟你这么讲，我认为经验这个东西也没用，那您告诉我中华民族5000年文化吧，5000年的经验，那你为什么没有美国200多年的经验富呢，你中国没有美国富吧，这是事实吧</div>
+    </div>
+<div class="turn-item">
+      <span class="turn-num">第6轮</span>
+      <span class="turn-time">2026-07-01 00:45:51</span>
+      <div class="turn-text">就是我跟你这么讲，就是你走这个大众这个路线的人，你是100%不可能挣到钱的，因为你不是全中国那3%的人，全中国3%的那拨人是出生就挣到那份钱的人，还有那些人是从小培养的人，到24岁分配正经工作的人，你是这些人儿吗</div>
+    </div>
+  </div>
+<div class="multi-turn-case">
+    <div class="case-header"><span class="l2-badge" style="background:#4285F4">L2-1</span> 综合行程规划 · 5 轮对话</div>
+    <div class="turn-item">
+      <span class="turn-num">第1轮</span>
+      <span class="turn-time">2026-06-27 11:55:50</span>
+      <div class="turn-text">7月中旬新疆親子遊攻略</div>
+    </div>
+<div class="turn-item">
+      <span class="turn-num">第2轮</span>
+      <span class="turn-time">2026-06-27 12:25:03</span>
+      <div class="turn-text">看了下阿勒泰不是特別方便，這段行程可以取消</div>
+    </div>
+<div class="turn-item">
+      <span class="turn-num">第3轮</span>
+      <span class="turn-time">2026-06-28 17:59:23</span>
+      <div class="turn-text">7.20到喀什，喀什+庫車請詳細規劃下行程，剛說到的幾個地方都想要去</div>
+    </div>
+<div class="turn-item">
+      <span class="turn-num">第4轮</span>
+      <span class="turn-time">2026-06-28 18:16:43</span>
+      <div class="turn-text">結論錯了吧 是先庫車後喀什 這樣行程順</div>
+    </div>
+<div class="turn-item">
+      <span class="turn-num">第5轮</span>
+      <span class="turn-time">2026-06-28 18:21:21</span>
+      <div class="turn-text">那請具體規劃下行程路線以及費用</div>
+    </div>
+  </div>
+<div class="multi-turn-case">
+    <div class="case-header"><span class="l2-badge" style="background:#FBBC05">L2-7</span> 住宿推荐与咨询 · 4 轮对话</div>
+    <div class="turn-item">
+      <span class="turn-num">第1轮</span>
+      <span class="turn-time">2026-06-28 17:04:59</span>
+      <div class="turn-text">旅行社是退回了所支付的费用，活动费用全部金额</div>
+    </div>
+<div class="turn-item">
+      <span class="turn-num">第2轮</span>
+      <span class="turn-time">2026-06-30 01:18:54</span>
+      <div class="turn-text">周六下午拼车去则巴村，周日早上则巴村看日照金山，然后去夯达营地和则巴秘境。周日晚上找车去下则通村。周一早上去格聂之眼看日照金山，时间允许就回民宿吃个早餐再睡一会，再回理塘</div>
+    </div>
+<div class="turn-item">
+      <span class="turn-num">第3轮</span>
+      <span class="turn-time">2026-06-30 10:48:02</span>
+      <div class="turn-text">则巴村推荐的民宿</div>
+    </div>
+<div class="turn-item">
+      <span class="turn-num">第4轮</span>
+      <span class="turn-time">2026-07-01 20:54:12</span>
+      <div class="turn-text">格聂游玩，住则巴村。除了新老冷古寺、一棵树、则巴秘境和格聂之眼，还有哪些游玩地点</div>
+    </div>
+  </div>
+<div class="multi-turn-case">
+    <div class="case-header"><span class="l2-badge" style="background:#EA4335">L2-10</span> 交通票务信息 · 4 轮对话</div>
+    <div class="turn-item">
+      <span class="turn-num">第1轮</span>
+      <span class="turn-time">2026-06-30 07:03:07</span>
+      <div class="turn-text">我是从常州到上海虹桥机场虹桥火车站是坐的D开头的火车，不是高铁吧应该，那出来能找到市域铁吗市域铁</div>
+    </div>
+<div class="turn-item">
+      <span class="turn-num">第2轮</span>
+      <span class="turn-time">2026-06-30 07:04:30</span>
+      <div class="turn-text">我想问上海浦东机场从上海到北京它是特命的是T2还是T1</div>
+    </div>
+<div class="turn-item">
+      <span class="turn-num">第3轮</span>
+      <span class="turn-time">2026-06-30 07:14:18</span>
+      <div class="turn-text">点点我是今天9:30p.m.从上海到北京中转然后去英国getaway的ca510的飞机，那它到中在北京中转的时候行李是直挂吗？ca510我是不是不用取行李</div>
+    </div>
+<div class="turn-item">
+      <span class="turn-num">第4轮</span>
+      <span class="turn-time">2026-06-30 07:16:08</span>
+      <div class="turn-text">这个是上海浦东机场飞的吧，浦东机场从上海到北京中转，中转然后从北京到那个，到get wake吗</div>
+    </div>
+  </div>
+<div class="multi-turn-case">
+    <div class="case-header"><span class="l2-badge" style="background:#34A853">L2-5</span> 目的地推荐 · 4 轮对话</div>
+    <div class="turn-item">
+      <span class="turn-num">第1轮</span>
+      <span class="turn-time">2026-06-28 16:08:07</span>
+      <div class="turn-text">深圳大学计算机科学与技术</div>
+    </div>
+<div class="turn-item">
+      <span class="turn-num">第2轮</span>
+      <span class="turn-time">2026-06-28 18:36:46</span>
+      <div class="turn-text">华南理工大学旅游管理双学士学位复合人才项目</div>
+    </div>
+<div class="turn-item">
+      <span class="turn-num">第3轮</span>
+      <span class="turn-time">2026-06-29 14:30:42</span>
+      <div class="turn-text">深圳大学和暨南大学的计算机科学与技术对比</div>
+    </div>
+<div class="turn-item">
+      <span class="turn-num">第4轮</span>
+      <span class="turn-time">2026-06-30 18:03:17</span>
+      <div class="turn-text">苏州大学的数据科学与大数据技术和信息与计算科学，怎么选</div>
+    </div>
+  </div>
+      </div>
+
+      <div id="sec4-3" class="card">
+        <h2>4.3 时间分布</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+          <div>
+            <h4>按小时分布</h4>
+            <div class="chart-container">
+              <div class="hour-bar-wrap"><div class="hour-bar" style="height:81px"></div><div class="hour-label">0</div></div>
+<div class="hour-bar-wrap"><div class="hour-bar" style="height:43px"></div><div class="hour-label">1</div></div>
+<div class="hour-bar-wrap"><div class="hour-bar" style="height:24px"></div><div class="hour-label">2</div></div>
+<div class="hour-bar-wrap"><div class="hour-bar" style="height:15px"></div><div class="hour-label">3</div></div>
+<div class="hour-bar-wrap"><div class="hour-bar" style="height:13px"></div><div class="hour-label">4</div></div>
+<div class="hour-bar-wrap"><div class="hour-bar" style="height:18px"></div><div class="hour-label">5</div></div>
+<div class="hour-bar-wrap"><div class="hour-bar" style="height:22px"></div><div class="hour-label">6</div></div>
+<div class="hour-bar-wrap"><div class="hour-bar" style="height:46px"></div><div class="hour-label">7</div></div>
+<div class="hour-bar-wrap"><div class="hour-bar" style="height:66px"></div><div class="hour-label">8</div></div>
+<div class="hour-bar-wrap"><div class="hour-bar" style="height:79px"></div><div class="hour-label">9</div></div>
+<div class="hour-bar-wrap"><div class="hour-bar" style="height:104px"></div><div class="hour-label">10</div></div>
+<div class="hour-bar-wrap"><div class="hour-bar" style="height:99px"></div><div class="hour-label">11</div></div>
+<div class="hour-bar-wrap"><div class="hour-bar" style="height:92px"></div><div class="hour-label">12</div></div>
+<div class="hour-bar-wrap"><div class="hour-bar" style="height:98px"></div><div class="hour-label">13</div></div>
+<div class="hour-bar-wrap"><div class="hour-bar" style="height:105px"></div><div class="hour-label">14</div></div>
+<div class="hour-bar-wrap"><div class="hour-bar" style="height:97px"></div><div class="hour-label">15</div></div>
+<div class="hour-bar-wrap"><div class="hour-bar" style="height:109px"></div><div class="hour-label">16</div></div>
+<div class="hour-bar-wrap"><div class="hour-bar" style="height:98px"></div><div class="hour-label">17</div></div>
+<div class="hour-bar-wrap"><div class="hour-bar" style="height:102px"></div><div class="hour-label">18</div></div>
+<div class="hour-bar-wrap"><div class="hour-bar" style="height:103px"></div><div class="hour-label">19</div></div>
+<div class="hour-bar-wrap"><div class="hour-bar" style="height:100px"></div><div class="hour-label">20</div></div>
+<div class="hour-bar-wrap"><div class="hour-bar" style="height:108px"></div><div class="hour-label">21</div></div>
+<div class="hour-bar-wrap"><div class="hour-bar" style="height:120px"></div><div class="hour-label">22</div></div>
+<div class="hour-bar-wrap"><div class="hour-bar" style="height:99px"></div><div class="hour-label">23</div></div>
+            </div>
+            <p style="font-size:12px;color:#888;margin-top:4px">高峰时段集中在晚间 20-23 点，符合用户在睡前规划旅行的场景</p>
+          </div>
+          <div>
+            <h4>按日期分布</h4>
+            <div class="chart-container">
+              <div class="date-bar-wrap"><div class="date-bar" style="height:85px"></div><div class="date-label">06-25<br/>周四</div></div>
+<div class="date-bar-wrap"><div class="date-bar" style="height:96px"></div><div class="date-label">06-26<br/>周五</div></div>
+<div class="date-bar-wrap"><div class="date-bar" style="height:99px"></div><div class="date-label">06-27<br/>周六</div></div>
+<div class="date-bar-wrap"><div class="date-bar" style="height:100px"></div><div class="date-label">06-28<br/>周日</div></div>
+<div class="date-bar-wrap"><div class="date-bar" style="height:89px"></div><div class="date-label">06-29<br/>周一</div></div>
+<div class="date-bar-wrap"><div class="date-bar" style="height:87px"></div><div class="date-label">06-30<br/>周二</div></div>
+<div class="date-bar-wrap"><div class="date-bar" style="height:98px"></div><div class="date-label">07-01<br/>周三</div></div>
+            </div>
+            <p style="font-size:12px;color:#888;margin-top:4px">7 天内 query 量分布，可观察周中/周末差异</p>
+          </div>
+        </div>
+      </div>
+
+      <div id="sec4-4" class="card">
+        <h2>4.4 Query 长度与需求类型</h2>
+        <p style="font-size:13px;color:#666;margin-bottom:12px">不同 L1 大类的 query 长度特征（不含笔记 JSON 类 query）：</p>
+        <table>
+          <thead><tr><th>L1 大类</th><th>平均长度</th><th>P50</th><th>P90</th><th>最大</th></tr></thead>
+          <tbody><tr><td style="color:#4285F4;font-weight:600">行程规划</td><td>107</td><td>22</td><td>198</td><td>1758</td></tr>
+<tr><td style="color:#34A853;font-weight:600">目的地与景点</td><td>49</td><td>15</td><td>48</td><td>1379</td></tr>
+<tr><td style="color:#FBBC05;font-weight:600">吃住服务</td><td>53</td><td>16</td><td>61</td><td>1123</td></tr>
+<tr><td style="color:#EA4335;font-weight:600">交通出行</td><td>27</td><td>16</td><td>42</td><td>1078</td></tr>
+<tr><td style="color:#8E24AA;font-weight:600">出行准备</td><td>26</td><td>16</td><td>50</td><td>492</td></tr></tbody>
+        </table>
+        <p style="font-size:12px;color:#888;margin-top:8px">行程规划类 query 通常较长（包含出发地、目的地、天数、人数等约束条件），交通出行类较短（直接的 A→B 导航查询）。</p>
+      </div>
+    </div>
+
+    <!-- ===== 5. 高频 Query 模式 ===== -->
+    <div id="sec5" class="section">
+      <div class="section-title"><span class="section-num">5</span> 高频 Query 模式与典型案例</div>
+
+      <div class="card">
+        <h2>各 L2 类别的高频模式和代表性 Query</h2>
+        <p style="font-size:13px;color:#666;margin-bottom:16px">以下展示每个 L2 类别中清洗后的高频模式（已去除笔记 JSON 前缀噪声）和代表性 query 原文。</p>
+        
+  <div class="l2-pattern-block">
+    <h4><span class="l2-mini-badge" style="background:#4285F4">L2-1</span> 综合行程规划</h4>
+    <div class="pattern-examples-grid">
+      <div>
+        <p class="sub-label">高频模式</p>
+        <div class="pattern-item"><span class="pattern-text">规划游玩路线</span><span class="pattern-count">6</span></div>
+<div class="pattern-item"><span class="pattern-text">规划行程路线</span><span class="pattern-count">2</span></div>
+<div class="pattern-item"><span class="pattern-text">日照旅游攻略</span><span class="pattern-count">2</span></div>
+<div class="pattern-item"><span class="pattern-text">我今天下下午三点之前去神户一趟，从这个大阪然后三点之后再坐地铁去京都，然后去那个福建什么社可以吗？</span><span class="pattern-count">1</span></div>
+<div class="pattern-item"><span class="pattern-text">烟台旅游攻略</span><span class="pattern-count">1</span></div>
+      </div>
+      <div>
+        <p class="sub-label">代表性 Query</p>
+        <div class="example-query">我今天下下午三点之前去神户一趟，从这个大阪然后三点之后再坐地铁去京都，然后去那个福建什么社可以吗？</div>
+<div class="example-query">烟台旅游攻略</div>
+<div class="example-query">两条线的住宿和具体行程写出来</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="l2-pattern-block">
+    <h4><span class="l2-mini-badge" style="background:#34A853">L2-6</span> 景点推荐与咨询</h4>
+    <div class="pattern-examples-grid">
+      <div>
+        <p class="sub-label">高频模式</p>
+        <div class="pattern-item"><span class="pattern-text">上海本地人周末都去哪儿玩</span><span class="pattern-count">3</span></div>
+<div class="pattern-item"><span class="pattern-text">成都看夜景去哪里更有氛围感</span><span class="pattern-count">2</span></div>
+<div class="pattern-item"><span class="pattern-text">推荐几个好玩的周末约会项目</span><span class="pattern-count">2</span></div>
+<div class="pattern-item"><span class="pattern-text">这里好玩吗</span><span class="pattern-count">2</span></div>
+<div class="pattern-item"><span class="pattern-text">北京北京环球度假区</span><span class="pattern-count">2</span></div>
+      </div>
+      <div>
+        <p class="sub-label">代表性 Query</p>
+        <div class="example-query">帮我推荐一家三口自驾去长春带两个中年人60岁身体算比较健壮，想去一些没有过多人为建造的景点比如伪满皇宫等这类有历史价值或者像天然氧吧那种，还需要去一些比较有当地特色的人文历史自然景观比如长春电影厂，去一些买东西的地方比如新天地购物广场这有山</div>
+<div class="example-query">万峰湖分别有哪些码头？怎么游玩</div>
+<div class="example-query">打算在加州去赤峰附近的草原去转一转，但是好像天气很差全是阴雨天，那么有没有其他的选择呢？从松原出发比如说前往吉林省附近长白山，如果不去长白山的话有什么其他的可以参观的地方吗</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="l2-pattern-block">
+    <h4><span class="l2-mini-badge" style="background:#FBBC05">L2-7</span> 住宿推荐与咨询</h4>
+    <div class="pattern-examples-grid">
+      <div>
+        <p class="sub-label">高频模式</p>
+        <div class="pattern-item"><span class="pattern-text">介绍下这个酒店</span><span class="pattern-count">4</span></div>
+<div class="pattern-item"><span class="pattern-text">这个酒店叫什么</span><span class="pattern-count">2</span></div>
+<div class="pattern-item"><span class="pattern-text">这家酒店怎么样</span><span class="pattern-count">2</span></div>
+<div class="pattern-item"><span class="pattern-text">这家酒店叫什么</span><span class="pattern-count">2</span></div>
+<div class="pattern-item"><span class="pattern-text">南京能看到绝美夜景的酒店</span><span class="pattern-count">1</span></div>
+      </div>
+      <div>
+        <p class="sub-label">代表性 Query</p>
+        <div class="example-query">南京能看到绝美夜景的酒店</div>
+<div class="example-query">2612开头是北京吗</div>
+<div class="example-query">去溧阳游玩推荐酒店</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="l2-pattern-block">
+    <h4><span class="l2-mini-badge" style="background:#4285F4">L2-2</span> 路线规划</h4>
+    <div class="pattern-examples-grid">
+      <div>
+        <p class="sub-label">高频模式</p>
+        <div class="pattern-item"><span class="pattern-text">规划游玩路线</span><span class="pattern-count">5</span></div>
+<div class="pattern-item"><span class="pattern-text">附近适合散步的小众路线</span><span class="pattern-count">4</span></div>
+<div class="pattern-item"><span class="pattern-text">北京小众的Citywalk路线</span><span class="pattern-count">2</span></div>
+<div class="pattern-item"><span class="pattern-text">规划这条路线</span><span class="pattern-count">2</span></div>
+<div class="pattern-item"><span class="pattern-text">从西安钟楼出发一日逛吃路线</span><span class="pattern-count">2</span></div>
+      </div>
+      <div>
+        <p class="sub-label">代表性 Query</p>
+        <div class="example-query">7.11-7.19 长沙到延吉、长白山、哈尔滨、伊春的路线安排</div>
+<div class="example-query">住在中山区东港商务区，天气小雨，想在一天内逛完中山路和东港，上午九十点出门，中午回来睡个午觉，下午两点再出门，晚上可以玩到七八点，citywalk➕美食，好吃又好逛，出行可以是公交和地铁，请安排合适内容</div>
+<div class="example-query">路线跟住宿推荐</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="l2-pattern-block">
+    <h4><span class="l2-mini-badge" style="background:#EA4335">L2-9</span> 路线导航查询</h4>
+    <div class="pattern-examples-grid">
+      <div>
+        <p class="sub-label">高频模式</p>
+        <div class="pattern-item"><span class="pattern-text">从庐山风景区索道下山再去九江站西门也就才三更，时间更少了是吗</span><span class="pattern-count">1</span></div>
+<div class="pattern-item"><span class="pattern-text">南澳岛距离万象城广州西岸有多远</span><span class="pattern-count">1</span></div>
+<div class="pattern-item"><span class="pattern-text">双月湾离哪个高铁站最近</span><span class="pattern-count">1</span></div>
+<div class="pattern-item"><span class="pattern-text">杭州到贵州火车多久</span><span class="pattern-count">1</span></div>
+<div class="pattern-item"><span class="pattern-text">在大理火车站去沙溪怎么去，推荐下性价比高的住宿</span><span class="pattern-count">1</span></div>
+      </div>
+      <div>
+        <p class="sub-label">代表性 Query</p>
+        <div class="example-query">从庐山风景区索道下山再去九江站西门也就才三更，时间更少了是吗</div>
+<div class="example-query">南澳岛距离万象城广州西岸有多远</div>
+<div class="example-query">双月湾离哪个高铁站最近</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="l2-pattern-block">
+    <h4><span class="l2-mini-badge" style="background:#4285F4">L2-4</span> 攻略内容理解</h4>
+    <div class="pattern-examples-grid">
+      <div>
+        <p class="sub-label">高频模式</p>
+        <div class="pattern-item"><span class="pattern-text">总结这篇游玩攻略</span><span class="pattern-count">7</span></div>
+<div class="pattern-item"><span class="pattern-text">总结游玩攻略</span><span class="pattern-count">4</span></div>
+<div class="pattern-item"><span class="pattern-text">总结视频里的景点</span><span class="pattern-count">4</span></div>
+<div class="pattern-item"><span class="pattern-text">总结视频攻略</span><span class="pattern-count">3</span></div>
+<div class="pattern-item"><span class="pattern-text">总结购物攻略</span><span class="pattern-count">2</span></div>
+      </div>
+      <div>
+        <p class="sub-label">代表性 Query</p>
+        <div class="example-query">总结这些徒步路线</div>
+<div class="example-query">总结活动攻略</div>
+<div class="example-query">总结酒店优缺点</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="l2-pattern-block">
+    <h4><span class="l2-mini-badge" style="background:#34A853">L2-5</span> 目的地推荐</h4>
+    <div class="pattern-examples-grid">
+      <div>
+        <p class="sub-label">高频模式</p>
+        <div class="pattern-item"><span class="pattern-text">推荐几个好玩的周末约会项目</span><span class="pattern-count">8</span></div>
+<div class="pattern-item"><span class="pattern-text">国内有什么适合度假带酒廊的ihg酒店</span><span class="pattern-count">1</span></div>
+<div class="pattern-item"><span class="pattern-text">N 月全球适合旅行的目的地</span><span class="pattern-count">1</span></div>
+<div class="pattern-item"><span class="pattern-text">武汉带娃有哪里好玩的</span><span class="pattern-count">1</span></div>
+<div class="pattern-item"><span class="pattern-text">从南昌出发，限高人员只能坐动车以及k字头，带两岁宝宝可以去哪个城市玩更方便</span><span class="pattern-count">1</span></div>
+      </div>
+      <div>
+        <p class="sub-label">代表性 Query</p>
+        <div class="example-query">国内有什么适合度假带酒廊的ihg酒店</div>
+<div class="example-query">8 月全球适合旅行的目的地</div>
+<div class="example-query">武汉带娃有哪里好玩的</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="l2-pattern-block">
+    <h4><span class="l2-mini-badge" style="background:#8E24AA">L2-13</span> 旅行综合咨询</h4>
+    <div class="pattern-examples-grid">
+      <div>
+        <p class="sub-label">高频模式</p>
+        <div class="pattern-item"><span class="pattern-text">杭州市萧山区的天气预报N号的。</span><span class="pattern-count">1</span></div>
+<div class="pattern-item"><span class="pattern-text">我回去是联航路站，以这个为准高铁时间一小时就行</span><span class="pattern-count">1</span></div>
+<div class="pattern-item"><span class="pattern-text">oppoN去海边防水不</span><span class="pattern-count">1</span></div>
+<div class="pattern-item"><span class="pattern-text">总结一下花的钱，两个大人，两个小孩，包括过路费，油费，各种游玩的费用</span><span class="pattern-count">1</span></div>
+<div class="pattern-item"><span class="pattern-text">北京限行车牌的规则是什么什</span><span class="pattern-count">1</span></div>
+      </div>
+      <div>
+        <p class="sub-label">代表性 Query</p>
+        <div class="example-query">杭州市萧山区的天气预报29号的。</div>
+<div class="example-query">我回去是联航路站，以这个为准高铁时间一小时就行</div>
+<div class="example-query">oppo16去海边防水不</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="l2-pattern-block">
+    <h4><span class="l2-mini-badge" style="background:#EA4335">L2-10</span> 交通票务信息</h4>
+    <div class="pattern-examples-grid">
+      <div>
+        <p class="sub-label">高频模式</p>
+        <div class="pattern-item"><span class="pattern-text">我是从常州到上海虹桥机场虹桥火车站是坐的D开头的火车，不是高铁吧应该，那出来能找到市域铁吗市域铁</span><span class="pattern-count">1</span></div>
+<div class="pattern-item"><span class="pattern-text">N年春节往返欧洲的便宜机票</span><span class="pattern-count">1</span></div>
+<div class="pattern-item"><span class="pattern-text">为什么机票高铁票可以在第三方平台购买？</span><span class="pattern-count">1</span></div>
+<div class="pattern-item"><span class="pattern-text">怀化到长沙没有N.N.N的高铁票</span><span class="pattern-count">1</span></div>
+<div class="pattern-item"><span class="pattern-text">看一下到杭州到张家界的高铁，高铁票或者是卧铺票，就是晚上出发早上到的那个卧铺票有吗看一下</span><span class="pattern-count">1</span></div>
+      </div>
+      <div>
+        <p class="sub-label">代表性 Query</p>
+        <div class="example-query">我是从常州到上海虹桥机场虹桥火车站是坐的D开头的火车，不是高铁吧应该，那出来能找到市域铁吗市域铁</div>
+<div class="example-query">27年春节往返欧洲的便宜机票</div>
+<div class="example-query">为什么机票高铁票可以在第三方平台购买？</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="l2-pattern-block">
+    <h4><span class="l2-mini-badge" style="background:#FBBC05">L2-8</span> 美食推荐</h4>
+    <div class="pattern-examples-grid">
+      <div>
+        <p class="sub-label">高频模式</p>
+        <div class="pattern-item"><span class="pattern-text">上海好看又好吃的Brunch店</span><span class="pattern-count">2</span></div>
+<div class="pattern-item"><span class="pattern-text">这家店值得去吗</span><span class="pattern-count">2</span></div>
+<div class="pattern-item"><span class="pattern-text">桂林出发平潭远海好玩的地方好吃的地方</span><span class="pattern-count">1</span></div>
+<div class="pattern-item"><span class="pattern-text">安顺市有什么好玩的和美食推荐</span><span class="pattern-count">1</span></div>
+<div class="pattern-item"><span class="pattern-text">深圳哪个区最适合逛吃</span><span class="pattern-count">1</span></div>
+      </div>
+      <div>
+        <p class="sub-label">代表性 Query</p>
+        <div class="example-query">桂林出发平潭远海好玩的地方好吃的地方</div>
+<div class="example-query">安顺市有什么好玩的和美食推荐</div>
+<div class="example-query">深圳哪个区最适合逛吃</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="l2-pattern-block">
+    <h4><span class="l2-mini-badge" style="background:#8E24AA">L2-11</span> 签证与证件</h4>
+    <div class="pattern-examples-grid">
+      <div>
+        <p class="sub-label">高频模式</p>
+        <div class="pattern-item"><span class="pattern-text">护照上备注的那个补发和换发然后有什么区别</span><span class="pattern-count">1</span></div>
+<div class="pattern-item"><span class="pattern-text">韩国签证单次有效期</span><span class="pattern-count">1</span></div>
+<div class="pattern-item"><span class="pattern-text">云浮能选深圳佛山广州然后打印下来去线下办吗护照和港澳通行证</span><span class="pattern-count">1</span></div>
+<div class="pattern-item"><span class="pattern-text">我要了olive young 和大创的机场退税发票，但是我没用登记护照，我是N.N清州机场离境，我</span><span class="pattern-count">1</span></div>
+<div class="pattern-item"><span class="pattern-text">签证和护照</span><span class="pattern-count">1</span></div>
+      </div>
+      <div>
+        <p class="sub-label">代表性 Query</p>
+        <div class="example-query">护照上备注的那个补发和换发然后有什么区别</div>
+<div class="example-query">韩国签证单次有效期</div>
+<div class="example-query">云浮能选深圳佛山广州然后打印下来去线下办吗护照和港澳通行证</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="l2-pattern-block">
+    <h4><span class="l2-mini-badge" style="background:#4285F4">L2-3</span> 行程调整优化</h4>
+    <div class="pattern-examples-grid">
+      <div>
+        <p class="sub-label">高频模式</p>
+        <div class="pattern-item"><span class="pattern-text">沒有徒步行程，前面兩個都沒有</span><span class="pattern-count">1</span></div>
+<div class="pattern-item"><span class="pattern-text">加上：钟楼街，忻州古城，平遥古城，王家大院，八泉峡，太行山大峡谷，小西天，壶口瀑布。要求行程安排合理</span><span class="pattern-count">1</span></div>
+<div class="pattern-item"><span class="pattern-text">我现在路线改为拉萨四天三晚-火车到德令哈两天一晚-西宁三天两晚，帮我安排一下路线，我还喜欢自然 历史</span><span class="pattern-count">1</span></div>
+<div class="pattern-item"><span class="pattern-text">南京明孝陵好玩吗</span><span class="pattern-count">1</span></div>
+<div class="pattern-item"><span class="pattern-text">我都说了不要打乱我的后两天完整行程</span><span class="pattern-count">1</span></div>
+      </div>
+      <div>
+        <p class="sub-label">代表性 Query</p>
+        <div class="example-query">沒有徒步行程，前面兩個都沒有</div>
+<div class="example-query">加上：钟楼街，忻州古城，平遥古城，王家大院，八泉峡，太行山大峡谷，小西天，壶口瀑布。要求行程安排合理不走回头路，并且把中间的高铁换乘列出来。</div>
+<div class="example-query">我现在路线改为拉萨四天三晚-火车到德令哈两天一晚-西宁三天两晚，帮我安排一下路线，我还喜欢自然 历史 和野生动物</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="l2-pattern-block">
+    <h4><span class="l2-mini-badge" style="background:#8E24AA">L2-12</span> 购物与消费</h4>
+    <div class="pattern-examples-grid">
+      <div>
+        <p class="sub-label">高频模式</p>
+        <div class="pattern-item"><span class="pattern-text">现在到日本买什么</span><span class="pattern-count">1</span></div>
+<div class="pattern-item"><span class="pattern-text">徐州旅游，想给同事带点伴手礼，买啥好</span><span class="pattern-count">1</span></div>
+<div class="pattern-item"><span class="pattern-text">上海有什么合适的伴手礼吗？就是那种不是特别贵的，也是当地特产，在外面不怎么可能买得到的。比较有一点知</span><span class="pattern-count">1</span></div>
+<div class="pattern-item"><span class="pattern-text">纳帕海租车环湖怎么玩，路线是什么，现在出发来得及么</span><span class="pattern-count">1</span></div>
+<div class="pattern-item"><span class="pattern-text">关于退税我从瑞士回波兰，然后回中国怎么退？而且我是国别签。</span><span class="pattern-count">1</span></div>
+      </div>
+      <div>
+        <p class="sub-label">代表性 Query</p>
+        <div class="example-query">现在到日本买什么</div>
+<div class="example-query">徐州旅游，想给同事带点伴手礼，买啥好</div>
+<div class="example-query">上海有什么合适的伴手礼吗？就是那种不是特别贵的，也是当地特产，在外面不怎么可能买得到的。比较有一点知名度的小吃或糕点或者其他任何东西呢？你有推荐的吗？比较容易买的，因为我在那待的时间不长</div>
+      </div>
+    </div>
+  </div>
+      </div>
+
+      <div class="card">
+        <h2>标注备注中的边界案例</h2>
+        <p style="font-size:13px;color:#666;margin-bottom:12px">以下为 LLM 标注过程中标记了备注的有趣案例，反映了分类边界和 query 的复杂性。</p>
+        <div class="border-case">
+    <span class="l2-mini-badge" style="background:#EA4335">L2-9</span>
+    <span class="border-note">从庐山到九江站的时间/距离</span>
+    <div class="border-query">从庐山风景区索道下山再去九江站西门也就才三更，时间更少了是吗</div>
+  </div>
+<div class="border-case">
+    <span class="l2-mini-badge" style="background:#4285F4">L2-1</span>
+    <span class="border-note">大阪神户京都一日行程规划</span>
+    <div class="border-query">我今天下下午三点之前去神户一趟，从这个大阪然后三点之后再坐地铁去京都，然后去那个福建什么社可以吗？</div>
+  </div>
+<div class="border-case">
+    <span class="l2-mini-badge" style="background:#4285F4">L2-1</span>
+    <span class="border-note">要求写出住宿和行程，属于行程规划</span>
+    <div class="border-query">两条线的住宿和具体行程写出来</div>
+  </div>
+<div class="border-case">
+    <span class="l2-mini-badge" style="background:#4285F4">L2-3</span>
+    <span class="border-note">反馈行程中没有徒步，属行程调整</span>
+    <div class="border-query">沒有徒步行程，前面兩個都沒有</div>
+  </div>
+<div class="border-case">
+    <span class="l2-mini-badge" style="background:#34A853">L2-6</span>
+    <span class="border-note">北京看荷花咖啡厅+搓澡温泉顺序咨询</span>
+    <div class="border-query">北京可以看荷花的咖啡厅或者茶馆</div>
+  </div>
+<div class="border-case">
+    <span class="l2-mini-badge" style="background:#4285F4">L2-4</span>
+    <span class="border-note">分享笔记寻求理解/推荐</span>
+    <div class="border-query">[{&quot;info&quot;:{&quot;author&quot;:{&quot;avatar&quot;:&quot;https://sns-avatar-qc.xhscdn.com/avatar/1040g2jo31570u6v21a005o9e9b50j</div>
+  </div>
+<div class="border-case">
+    <span class="l2-mini-badge" style="background:#EA4335">L2-9</span>
+    <span class="border-note">杭州到贵州火车时间+天气咨询</span>
+    <div class="border-query">杭州到贵州火车多久</div>
+  </div>
+<div class="border-case">
+    <span class="l2-mini-badge" style="background:#8E24AA">L2-13</span>
+    <span class="border-note">手机去海边是否防水，出行准备咨询</span>
+    <div class="border-query">oppo16去海边防水不</div>
+  </div>
+<div class="border-case">
+    <span class="l2-mini-badge" style="background:#4285F4">L2-4</span>
+    <span class="border-note">分享笔记寻求理解/推荐</span>
+    <div class="border-query">[{&quot;info&quot;:{&quot;author&quot;:{&quot;avatar&quot;:&quot;https://sns-avatar-qc.xhscdn.com/avatar/62b217942fc6b41375486892.jpg?i</div>
+  </div>
+<div class="border-case">
+    <span class="l2-mini-badge" style="background:#4285F4">L2-4</span>
+    <span class="border-note">分享笔记寻求理解/推荐</span>
+    <div class="border-query">[{&quot;info&quot;:{&quot;author&quot;:{&quot;avatar&quot;:&quot;https://sns-avatar-qc.xhscdn.com/avatar/1040g2jo31n9kpg3p58004a3pte4ng</div>
+  </div>
+      </div>
+    </div>
+
+    <!-- ===== 6. 对抗审查 ===== -->
+    <div id="sec6" class="section">
+      <div class="section-title"><span class="section-num">6</span> 对抗审查</div>
+      <p style="font-size:14px;color:#666;margin-bottom:16px">对本报告的核心结论进行系统性反驳，评估结论的置信度。方法参考 AIM 购物决策报告：提出反驳 → 判断是否成立 → 调整置信度。</p>
+
+      <div class="audit-block">
+        <div class="audit-title">结论 1："行程规划是核心需求（41.2%）"</div>
+        <div class="audit-section">
+          <div class="audit-label refute">反驳尝试</div>
+          <div class="audit-text">L2-1 的 846 条中，存在相当比例的"XX旅游攻略""XX景点必去"类泛搜索 query，这些 query 的真实意图可能更接近景点推荐（L2-6）而非真正的行程规划——用户未必需要"帮我安排 5 天 4 晚行程"，可能只是想看看某地有什么值得去的。此外，暑期前的数据天然偏向行程规划，其他季节的分布可能不同。</div>
+        </div>
+        <div class="audit-section">
+          <div class="audit-label judge">判断</div>
+          <div class="audit-text"><strong>部分成立。</strong>L2-1 与 L2-6 之间确实存在分类灰区。"XX旅游攻略"类 query 可能被过度归入 L2-1。但即使保守估计，将 L2-1 中 20-30% 的泛搜索 query 移至 L2-6，行程规划大类仍然是第一大需求（占比 35%+）。季节性偏差是真实风险，需跨季对比验证。</div>
+        </div>
+        <div class="audit-section">
+          <div class="audit-label confidence">置信度调整</div>
+          <div class="audit-text"><strong>"行程规划是最大需求类别"</strong>——高置信度（方向性判断成立）。<br><strong>"综合行程规划占 24.9%"</strong>——中置信度（精确数值受分类灰区和季节性影响，实际可能在 18-25% 之间）。</div>
+        </div>
+      </div>
+
+      <div class="audit-block">
+        <div class="audit-title">结论 2："单轮为主（90.6%）说明旅游需求以单次提问为主"</div>
+        <div class="audit-section">
+          <div class="audit-label refute">反驳尝试</div>
+          <div class="audit-text">90.6% 单轮可能不是因为需求简单，而是产品形态的结果。(1) 点点当前的多轮对话引导不足——用户提完第一个问题后没有被引导继续追问；(2) 部分用户可能开了多个独立 session 来处理同一次旅行（如分别问行程、住宿、交通），被统计为 3 个单轮而非 1 个 3 轮；(3) 旅行规划本质上是复杂决策（地点、日期、预算、偏好等多维度），一轮对话很难覆盖。行程调整类需求（L2-3）仅占 3.0%，远低于其他旅游 AI 产品中的占比，可能正是多轮交互不足导致的需求抑制。</div>
+        </div>
+        <div class="audit-section">
+          <div class="audit-label judge">判断</div>
+          <div class="audit-text"><strong>成立。</strong>不能从"90% 单轮"推断"用户不需要多轮"。这是观测偏差——我们只能观测到用户在当前产品形态下的行为，而非用户的底层需求。FGD/用研数据可能能补充解释，但本次分析不包含该数据源。</div>
+        </div>
+        <div class="audit-section">
+          <div class="audit-label confidence">置信度调整</div>
+          <div class="audit-text"><strong>"单轮占比 90.6%"</strong>——高置信度（数据事实）。<br><strong>"旅游需求以单次提问为主"</strong>——低置信度（行为不等于需求，产品形态可能压制了多轮需求）。</div>
+        </div>
+      </div>
+
+      <div class="audit-block">
+        <div class="audit-title">结论 3："非旅游 15.8% 是可接受的筛选噪声"</div>
+        <div class="audit-section">
+          <div class="audit-label refute">反驳尝试</div>
+          <div class="audit-text">15.8% 意味着约 1/6 的流量进入旅游场景但并非旅游需求。如果这些流量在产品侧也被路由到旅游相关的 AI 能力（如旅游 prompt/工具），用户体验会受损。此外，639 条非旅游 query 没有被本报告分析，但它们的存在说明点点的场景路由或用户理解存在盲区——这些用户在旅游场景里问了教育/体育/闲聊类问题。</div>
+        </div>
+        <div class="audit-section">
+          <div class="audit-label judge">判断</div>
+          <div class="audit-text"><strong>部分成立。</strong>对分析报告而言，排除非旅游数据后的结论是可靠的——分母已统一为 3,396 旅游 query。但对产品体验而言，15.8% 的非旅游流量是一个需要关注的信号，可能需要优化场景路由。</div>
+        </div>
+        <div class="audit-section">
+          <div class="audit-label confidence">置信度调整</div>
+          <div class="audit-text"><strong>"不影响本报告分析结论"</strong>——高置信度。<br><strong>"不影响产品体验"</strong>——低置信度（需进一步评估场景路由逻辑）。</div>
+        </div>
+      </div>
+
+      <div class="audit-block">
+        <div class="audit-title">结论 4："UGC 消费场景是独特入口"</div>
+        <div class="audit-section">
+          <div class="audit-label refute">反驳尝试</div>
+          <div class="audit-text">笔记 JSON 开头的 query 约 129 条（3.8%），但这些 query 中有多少是用户主动发起的、多少是系统自动附带笔记上下文的？如果是后者，"UGC 消费场景"可能被高估——用户只是在点点里提了个问题，系统自动把当前浏览的笔记附上了。</div>
+        </div>
+        <div class="audit-section">
+          <div class="audit-label judge">判断</div>
+          <div class="audit-text"><strong>部分成立。</strong>需要区分"用户主动引用笔记"和"系统自动附带"两种情况。但无论哪种，用户在笔记消费场景中产生旅游需求是真实的——差别在于是"看到笔记后主动提问"还是"提问时系统自动补充了上下文"。两者都说明笔记与 AI 对话的联动有价值。</div>
+        </div>
+        <div class="audit-section">
+          <div class="audit-label confidence">置信度调整</div>
+          <div class="audit-text"><strong>"笔记场景与 AI 对话有联动价值"</strong>——高置信度。<br><strong>"用户主动从笔记发起 AI 咨询"</strong>——中置信度（需区分主动 vs 自动附带）。</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 7. 行动建议 ===== -->
+    <div id="sec7" class="section">
+      <div class="section-title"><span class="section-num">7</span> 行动建议</div>
+
+      <div class="action-block p0">
+        <div class="action-title"><span class="priority-tag p0">P0</span>优化综合行程规划能力</div>
+        <div class="action-text">
+          <p><strong>数据支撑：</strong>L2-1 综合行程规划占全部旅游需求的 24.9%（846 条），是用户最核心的使用场景。典型 query 模式："帮我规划XX N日游""N人N天旅游方案"，包含出发地、天数、人数、预算等多维约束。</p>
+          <p style="margin-top:8px"><strong>建议路径：</strong>(1) 增强多日游规划的结构化输出（按天分段、含吃住交通时间线）；(2) 主动引导用户补充缺失的约束条件（预算、出行方式、特殊需求）；(3) 支持行程调整——L2-3（行程调整）仅占 3.0%，可能因产品能力不足导致需求未充分表达。如果行程规划后能自然引导用户"哪些地方想调整？"，可能将 L2-3 的需求释放出来。</p>
+          <p style="margin-top:8px"><strong>置信度：</strong>行程规划是最大需求——高。具体优化方向——中（需要结合产品侧的用户满意度数据交叉验证）。</p>
+        </div>
+      </div>
+
+      <div class="action-block p1">
+        <div class="action-title"><span class="priority-tag p1">P1</span>提升笔记/攻略内容理解能力</div>
+        <div class="action-text">
+          <p><strong>数据支撑：</strong>L2-4 攻略内容理解占 6.3%（214 条），高频模式为"总结视频攻略""总结游玩攻略"等。更重要的是，约 129 条 query 以笔记 JSON 开头，说明 UGC 内容消费与 AI 交互的衔接是高价值场景。</p>
+          <p style="margin-top:8px"><strong>建议路径：</strong>(1) 优化笔记内容提取和结构化能力（从长文笔记中提取景点、费用、路线等结构化信息）；(2) 在笔记浏览场景中增加 AI 入口引导（"帮你总结这篇攻略的要点"）；(3) 支持跨笔记信息整合（"综合这 3 篇攻略的推荐，帮我规划行程"）。</p>
+          <p style="margin-top:8px"><strong>置信度：</strong>笔记场景有独特价值——高。跨笔记整合需求规模——低（需进一步验证）。</p>
+        </div>
+      </div>
+
+      <div class="action-block p2">
+        <div class="action-title"><span class="priority-tag p2">P2</span>加强目的地/景点推荐的个性化</div>
+        <div class="action-text">
+          <p><strong>数据支撑：</strong>L2-5 目的地推荐（201条, 5.9%）+ L2-6 景点推荐（601条, 17.7%）合计 802 条，占 23.6%。大量 query 为泛问形式："XX有什么好玩的""暑假去哪玩"。</p>
+          <p style="margin-top:8px"><strong>建议路径：</strong>(1) 结合用户画像（亲子/情侣/独行/老年）和时间约束提供个性化推荐；(2) 利用小红书 UGC 数据优势，推荐时附带高质量笔记佐证；(3) 区分"未确定目的地"（L2-5）和"已确定目的地"（L2-6）两种场景，前者需要更多引导式交互。</p>
+          <p style="margin-top:8px"><strong>置信度：</strong>推荐需求存在——高。个性化能提升满意度——中（需 A/B 验证）。</p>
+        </div>
+      </div>
+
+      <div class="action-block p3">
+        <div class="action-title"><span class="priority-tag p3">P3</span>交通和出行准备场景的工具化</div>
+        <div class="action-text">
+          <p><strong>数据支撑：</strong>L2-9 至 L2-13 合计 661 条，占 19.5%。这些需求多为信息查询类："XX到YY怎么走""签证怎么办""需要准备什么"。</p>
+          <p style="margin-top:8px"><strong>建议路径：</strong>(1) 对接实时数据源（航班/高铁时刻表、签证政策库），提供结构化工具回答而非纯文本；(2) 交通导航类需求（L2-9, 219 条）与地图/导航工具整合；(3) 签证证件类（L2-11, 108 条）需要权威数据源支撑，避免 AI 幻觉导致的签证信息错误。</p>
+          <p style="margin-top:8px"><strong>置信度：</strong>工具化方向正确——高。具体数据源对接的 ROI——中（需评估接入成本 vs 覆盖的 query 量）。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      本报告由 Query 需求分析工作流自动生成 | 数据管线: 10,000 → 7,856 → 4,035 → 3,396 旅游 query<br>
+      分类体系: 5 L1 / 13 L2 | 标注准确率: ~95%（20 条抽样复核）| Session: 20260702_190000_travel
+    </div>
+  </div>
+</div>
+</body>
+</html>
