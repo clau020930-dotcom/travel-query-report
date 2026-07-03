@@ -111,6 +111,30 @@
 
   .footer { text-align: center; color: #bbb; font-size: 12px; margin-top: 40px; padding: 20px 0; border-top: 1px solid #eee; }
 
+  /* 审查点 */
+  .audit-point { background: #fff; border: 1px solid #e8e8e8; border-radius: 10px; padding: 20px 24px; margin: 16px 0; }
+  .audit-point .audit-title { font-weight: 700; color: #333; margin-bottom: 8px; font-size: 15px; }
+  .audit-point .audit-label { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-left: 8px; }
+  .audit-point .label-high { background: #e6f4ea; color: #137333; }
+  .audit-point .label-mid { background: #fff3e0; color: #e65100; }
+  .audit-point .label-low { background: #fce8e6; color: #c5221f; }
+
+  /* 场景分析卡片 */
+  .scene-card { background: #fff; border: 1px solid #e8e8e8; border-radius: 10px; padding: 20px 24px; margin: 16px 0; }
+  .scene-card .scene-header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 12px; }
+  .scene-card .scene-name { font-size: 17px; font-weight: 700; color: #1a1a1a; }
+  .scene-card .scene-stats { font-size: 13px; color: #888; }
+  .scene-card .scene-def { font-size: 14px; color: #666; margin-bottom: 12px; padding: 8px 12px; background: #f8f9fa; border-radius: 6px; }
+  .scene-card .boundary { font-size: 13px; color: #888; padding: 8px 12px; background: #f8f9fa; border-radius: 6px; margin-top: 8px; }
+  .scene-card .boundary strong { color: #666; }
+
+  /* 多轮案例 timeline */
+  .timeline { margin: 12px 0; padding-left: 20px; border-left: 2px solid #e0e0e0; }
+  .timeline-item { margin-bottom: 12px; position: relative; }
+  .timeline-item::before { content: ''; position: absolute; left: -25px; top: 6px; width: 8px; height: 8px; border-radius: 50%; background: #4285F4; }
+  .timeline-item .turn-label { font-size: 12px; color: #999; font-weight: 600; }
+  .timeline-item .turn-content { font-size: 14px; color: #555; }
+
   @media (max-width: 900px) {
     .page { flex-direction: column; }
     .toc { display: none; }
@@ -134,16 +158,28 @@
   <a href="#s2-2">2.2 真实 query 长什么样</a>
   <a href="#s2-3">2.3 热门目的地和主题</a>
   <a href="#s2-4">2.4 用户画像</a>
-  <a href="#s3" class="toc-l1">三、Session 深度</a>
-  <a href="#s3-1">3.1 轮次分布</a>
-  <a href="#s3-2">3.2 旅游 vs 购物对比</a>
-  <a href="#s3-3">3.3 可能的解释</a>
-  <a href="#s4" class="toc-l1">四、能力和工具</a>
-  <a href="#s4-1">4.1 工具调用现状</a>
-  <a href="#s4-2">4.2 DR 攻略模式</a>
-  <a href="#s5" class="toc-l1">五、值得做 vs 不值得做</a>
-  <a href="#s6" class="toc-l1">六、和执行文档的对照</a>
-  <a href="#s7" class="toc-l1">七、数据局限</a>
+  <a href="#s2-5">2.5 L1 需求大类分布</a>
+  <a href="#s2-6">2.6 L2 细分需求</a>
+  <a href="#s2-7">2.7 置信度分析</a>
+  <a href="#s3" class="toc-l1">三、核心场景深度分析</a>
+  <a href="#s3-1">3.1 综合行程规划</a>
+  <a href="#s3-2">3.2 景点推荐</a>
+  <a href="#s3-3">3.3 住宿推荐</a>
+  <a href="#s3-4">3.4 路线规划</a>
+  <a href="#s3-5">3.5 高频 Query 模式</a>
+  <a href="#s4" class="toc-l1">四、Session 深度</a>
+  <a href="#s4-1">4.1 轮次分布</a>
+  <a href="#s4-2">4.2 多轮演进案例</a>
+  <a href="#s4-3">4.3 旅游 vs 购物对比</a>
+  <a href="#s4-4">4.4 Query 长度分析</a>
+  <a href="#s4-5">4.5 可能的解释</a>
+  <a href="#s5" class="toc-l1">五、能力和工具</a>
+  <a href="#s5-1">5.1 工具调用现状</a>
+  <a href="#s5-2">5.2 DR 攻略模式</a>
+  <a href="#s6" class="toc-l1">六、值得做 vs 不值得做</a>
+  <a href="#s7" class="toc-l1">七、和执行文档的对照</a>
+  <a href="#s8" class="toc-l1">八、对抗审查</a>
+  <a href="#s9" class="toc-l1">九、数据局限</a>
   <a href="#priority" class="toc-l1">行动建议优先级</a>
 </nav>
 
@@ -153,7 +189,7 @@
 <h1>去哪玩 — AIM Query & Session 分析报告</h1>
 <div class="subtitle">
   <span>数据范围：2026/6/23 - 6/29（7天）</span>
-  <span>底表：dm_dots_query_distribution_detail_1d_di</span>
+  <span>底表：dm_dots_query_distribution_detail_1d_di + query 抽样标注</span>
   <span>生成日期：2026/7/3</span>
 </div>
 
@@ -172,17 +208,22 @@
   </div>
 
   <div class="conclusion-item">
-    <div class="title">3. 用户已经在把点点当规划工具，而非搜索引擎</div>
+    <div class="title">3. 行程规划是绝对核心需求，占 41.2%</div>
+    <div class="body">对 3,396 个旅游 session 的 LLM 标注分析显示，<strong>行程规划大类以 1,400 条（41.2%）排名第一</strong>。其中 L2-1 综合行程规划 846 条（24.9%）远超第二名景点推荐 601 条。用户 query 极长极具体（平均 107 字），包含日期、人数、预算、约束条件 —— 这是搜索引擎做不到的事情。</div>
+  </div>
+
+  <div class="conclusion-item">
+    <div class="title">4. 用户已经在把点点当规划工具，而非搜索引擎</div>
     <div class="body">100 条 Do-计划 query 抽样显示，<strong>47% 的 query 是详细的行程规划请求</strong>，包含精确日期、人数、预算、约束条件。用户一次性把所有信息给完，期望 AI 输出"可直接执行的行程"。这与综搜的"XX 攻略"三四个字形成本质区别 —— <strong>Chat 场景天然承载复杂规划需求</strong>。</div>
   </div>
 
   <div class="conclusion-item">
-    <div class="title">4. 主站是流量主力，但需求结构和独立端一致</div>
+    <div class="title">5. 主站是流量主力，但需求结构和独立端一致</div>
     <div class="body">旅游 query <strong>67.1% 来自主站</strong>（小红书 App 内的点点入口），32.9% 来自独立端。主站用户"看笔记后自然发问"的行为链路天然适合旅游 —— 看到别人的游记就想问"我也想去，帮我规划一下"。这意味着<strong>搜索→点点的引流路径值得重点建设</strong>。</div>
   </div>
 
   <div class="conclusion-item">
-    <div class="title">5. 基建缺口大，但方向正确：携程数据+地图是刚需</div>
+    <div class="title">6. 基建缺口大，但方向正确：携程数据+地图是刚需</div>
     <div class="body">当前 AIM 旅游 session 的工具调用数据<strong>无法获取</strong>（无独立 tool_call 表），但从 query 内容看，用户对酒店价格(7%)、门票预订(7%)、地图路线(47%)、美食推荐(10%) 有强烈需求。执行文档中<strong>携程数据接入、地图路线规划</strong>的规划完全契合。</div>
   </div>
 
@@ -519,8 +560,6 @@
   </div>
 </div>
 
-<p>特点：一线+新一线扎堆（北京/广州/成都/西安），但<strong>小众目的地也不少</strong>（乌兰布统/淄博/瓦屋山） —— 佐证"高线用户偏深度游"。出境游有一定占比（马来西亚/印度/埃及/釜山/泰国）。</p>
-
 <p><strong>主题分布</strong>（100 条抽样）：</p>
 <table>
   <thead><tr><th>主题</th><th>占比</th><th>说明</th></tr></thead>
@@ -562,10 +601,293 @@
   <strong>性别和年龄数据暂不可用</strong>（PI3 敏感字段权限不足），建议后续申请。
 </div>
 
-<!-- ========== 三、Session 深度 ========== -->
-<h2 id="s3">三、用户为什么在旅游场景聊得下去</h2>
+<!-- ========== 2.5-2.7 需求分布全景 ========== -->
 
-<h3 id="s3-1">3.1 轮次分布</h3>
+<h3 id="s2-5">2.5 L1 需求大类分布</h3>
+
+<div class="callout">
+  以下数据来自对 <strong>3,396 个旅游 session</strong> 的 LLM 标注分析（分类体系：5 L1 / 13 L2，标注准确率 ~95%）。与上文 dibp 大盘数据（69,505 query / 10,532 chat）<strong>口径不同</strong>，是对旅游 query 进行语义细分后的结果。
+</div>
+
+<div class="bar-chart">
+<div class="bar-row">
+    <div class="bar-label">行程规划</div>
+    <div class="bar-track">
+      <div class="bar-fill" style="width: 82.4%; background: #4285F4;">1400条 · 41.2%</div>
+    </div>
+  </div>
+<div class="bar-row">
+    <div class="bar-label">目的地与景点</div>
+    <div class="bar-track">
+      <div class="bar-fill" style="width: 47.2%; background: #34A853;">802条 · 23.6%</div>
+    </div>
+  </div>
+<div class="bar-row">
+    <div class="bar-label">吃住服务</div>
+    <div class="bar-track">
+      <div class="bar-fill" style="width: 31.4%; background: #FBBC05;">533条 · 15.7%</div>
+    </div>
+  </div>
+<div class="bar-row">
+    <div class="bar-label">交通出行</div>
+    <div class="bar-track">
+      <div class="bar-fill" style="width: 21%; background: #EA4335;">357条 · 10.5%</div>
+    </div>
+  </div>
+<div class="bar-row">
+    <div class="bar-label">出行准备</div>
+    <div class="bar-track">
+      <div class="bar-fill" style="width: 18%; background: #7b68ee;">304条 · 9%</div>
+    </div>
+  </div>
+</div>
+
+<div class="callout good">
+  <strong>行程规划以 41.2%（1,400 条）占据绝对主导</strong>，是第二名"目的地与景点"(23.6%)的近两倍。合计行程规划+目的地景点占 64.8% —— 近 2/3 的旅游需求围绕"去哪+怎么去+怎么玩"。
+</div>
+
+<h3 id="s2-6">2.6 L2 细分需求分布</h3>
+
+<table>
+  <thead><tr><th>L1</th><th>L2</th><th>名称</th><th>数量</th><th>占比</th><th>高置信</th><th>低置信</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>行程规划</td><td><code>L2-1</code></td><td><strong>综合行程规划</strong></td>
+      <td class="mono">846</td><td class="mono">24.9%</td>
+      <td class="mono">85%</td>
+      <td class="mono" style="color:#999">0%</td>
+    </tr>
+    <tr>
+      <td>行程规划</td><td><code>L2-2</code></td><td><strong>路线规划</strong></td>
+      <td class="mono">237</td><td class="mono">7%</td>
+      <td class="mono">68%</td>
+      <td class="mono" style="color:#999">1%</td>
+    </tr>
+    <tr>
+      <td>行程规划</td><td><code>L2-4</code></td><td><strong>攻略内容理解</strong></td>
+      <td class="mono">214</td><td class="mono">6.3%</td>
+      <td class="mono">47%</td>
+      <td class="mono" style="color:#EA4335">6%</td>
+    </tr>
+    <tr>
+      <td>行程规划</td><td><code>L2-3</code></td><td><strong>行程调整优化</strong></td>
+      <td class="mono">103</td><td class="mono">3%</td>
+      <td class="mono">71%</td>
+      <td class="mono" style="color:#999">0%</td>
+    </tr>
+    <tr>
+      <td>目的地与景点</td><td><code>L2-6</code></td><td><strong>景点推荐与咨询</strong></td>
+      <td class="mono">601</td><td class="mono">17.7%</td>
+      <td class="mono">54%</td>
+      <td class="mono" style="color:#EA4335">7%</td>
+    </tr>
+    <tr>
+      <td>目的地与景点</td><td><code>L2-5</code></td><td><strong>目的地推荐</strong></td>
+      <td class="mono">201</td><td class="mono">5.9%</td>
+      <td class="mono">72%</td>
+      <td class="mono" style="color:#EA4335">10%</td>
+    </tr>
+    <tr>
+      <td>吃住服务</td><td><code>L2-7</code></td><td><strong>住宿推荐与咨询</strong></td>
+      <td class="mono">412</td><td class="mono">12.1%</td>
+      <td class="mono">53%</td>
+      <td class="mono" style="color:#999">1%</td>
+    </tr>
+    <tr>
+      <td>吃住服务</td><td><code>L2-8</code></td><td><strong>美食推荐</strong></td>
+      <td class="mono">121</td><td class="mono">3.6%</td>
+      <td class="mono">80%</td>
+      <td class="mono" style="color:#999">0%</td>
+    </tr>
+    <tr>
+      <td>交通出行</td><td><code>L2-9</code></td><td><strong>路线导航查询</strong></td>
+      <td class="mono">219</td><td class="mono">6.4%</td>
+      <td class="mono">74%</td>
+      <td class="mono" style="color:#999">5%</td>
+    </tr>
+    <tr>
+      <td>交通出行</td><td><code>L2-10</code></td><td><strong>交通票务信息</strong></td>
+      <td class="mono">138</td><td class="mono">4.1%</td>
+      <td class="mono">71%</td>
+      <td class="mono" style="color:#999">1%</td>
+    </tr>
+    <tr>
+      <td>出行准备</td><td><code>L2-13</code></td><td><strong>旅行综合咨询</strong></td>
+      <td class="mono">149</td><td class="mono">4.4%</td>
+      <td class="mono">43%</td>
+      <td class="mono" style="color:#999">2%</td>
+    </tr>
+    <tr>
+      <td>出行准备</td><td><code>L2-11</code></td><td><strong>签证与证件</strong></td>
+      <td class="mono">108</td><td class="mono">3.2%</td>
+      <td class="mono">90%</td>
+      <td class="mono" style="color:#999">0%</td>
+    </tr>
+    <tr>
+      <td>出行准备</td><td><code>L2-12</code></td><td><strong>购物与消费</strong></td>
+      <td class="mono">47</td><td class="mono">1.4%</td>
+      <td class="mono">85%</td>
+      <td class="mono" style="color:#999">0%</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <strong>L2-1 综合行程规划（846 条，24.9%）遥遥领先</strong>，是第二名 L2-6 景点推荐（601 条）的 1.4 倍。前 5 名集中在行程规划和目的地/景点两大类，合计占 73.3%。
+</div>
+
+<h3 id="s2-7">2.7 置信度分析</h3>
+
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="label">高置信标注</div>
+    <div class="value">68.3%</div>
+    <div class="sub">2,756 / 3,396</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">中置信标注</div>
+    <div class="value">27.1%</div>
+    <div class="sub">919 条</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">低置信标注</div>
+    <div class="value">4.6%</div>
+    <div class="sub">仅 156 条，分类基本可靠</div>
+  </div>
+</div>
+
+<div class="callout warn">
+  <strong>置信度偏低的 L2 类别</strong>：L2-5 目的地推荐（低置信 10%）和 L2-6 景点推荐（低置信 7%）边界易混淆 —— "推荐XX附近好玩的"既可以是景点推荐也可以是目的地推荐。L2-4 攻略内容理解（低置信 6%）与其他类别也有一定交叉。<br><br>
+  <strong>置信度最高的 L2</strong>：L2-11 签证证件（90%）和 L2-1 综合行程规划（85%），说明这两类需求边界最清晰。
+</div>
+
+<!-- ========== 三、核心场景深度分析 ========== -->
+<h2 id="s3">三、核心需求场景深度分析</h2>
+
+<p>对 Top 5 L2 类别的深度拆解，展示每个场景的用户行为模式、高频表达和产品机会：</p>
+
+<h3 id="s3-1">3.1 L2-1 综合行程规划（846 条，24.9%）</h3>
+
+<div class="scene-card">
+  <div class="scene-header">
+    <div class="scene-name">综合行程规划</div>
+    <div class="scene-stats">846 条 · 24.9% · 高置信 85%</div>
+  </div>
+  <div class="scene-def">规划完整旅行行程，包括多日游攻略、全程安排（含吃住交通时间线），通常包含出发地、天数、人数、预算等约束条件。</div>
+
+  <p><strong>典型 Query：</strong></p>
+  <div class="case-box">
+    <div class="query-text">"无锡出发去浙江海边城市游玩，5天的行程安排"</div>
+  </div>
+  <div class="case-box">
+    <div class="query-text">"7.11-7.19 长沙到延吉、长白山、哈尔滨、伊春的路线安排"</div>
+  </div>
+  <div class="case-box">
+    <div class="query-text">"济州岛旅游攻略"</div>
+  </div>
+
+  <p><strong>高频模式：</strong>"规划游玩路线"（6次）、"规划行程路线"（2次）、"XX旅游攻略"（多次）</p>
+
+  <div class="boundary"><strong>易混淆边界</strong>：与 L2-2（路线规划）— L2-1 包含吃住时间安排的<strong>完整行程</strong>，L2-2 侧重游玩路径顺序。与 L2-6（景点推荐）— "XX旅游攻略"类 query 可能仅需景点推荐而非完整行程。</div>
+</div>
+
+<h3 id="s3-2">3.2 L2-6 景点推荐与咨询（601 条，17.7%）</h3>
+
+<div class="scene-card">
+  <div class="scene-header">
+    <div class="scene-name">景点推荐与咨询</div>
+    <div class="scene-stats">601 条 · 17.7% · 高置信 54% · 低置信 7%</div>
+  </div>
+  <div class="scene-def">已确定目的地，查询或推荐具体景点、活动、体验。与 L2-5（目的地推荐）的区别是 L2-6 已确定城市/区域。</div>
+
+  <p><strong>典型 Query：</strong></p>
+  <div class="case-box">
+    <div class="query-text">"上海本地人周末都去哪儿玩"</div>
+  </div>
+  <div class="case-box">
+    <div class="query-text">"北京可以看荷花的咖啡厅或者茶馆"</div>
+  </div>
+  <div class="case-box">
+    <div class="query-text">"成都看夜景去哪里更有氛围感"</div>
+  </div>
+
+  <p><strong>高频模式：</strong>"上海本地人周末都去哪儿玩"（3次）、"成都看夜景去哪里更有氛围感"（2次）、"推荐几个好玩的周末约会项目"（2次）、"这里好玩吗"（2次）</p>
+
+  <div class="boundary"><strong>易混淆边界</strong>：与 L2-5（目的地推荐）— L2-6 已确定城市，L2-5 尚未确定去哪。与 L2-1 — 仅需列举景点归 L2-6，需安排行程归 L2-1。</div>
+</div>
+
+<h3 id="s3-3">3.3 L2-7 住宿推荐与咨询（412 条，12.1%）</h3>
+
+<div class="scene-card">
+  <div class="scene-header">
+    <div class="scene-name">住宿推荐与咨询</div>
+    <div class="scene-stats">412 条 · 12.1% · 高置信 53%</div>
+  </div>
+  <div class="scene-def">酒店/民宿的推荐、对比、评价、选择。大量 query 以笔记 JSON 开头，说明 UGC 内容消费与 AI 交互的衔接是高价值场景。</div>
+
+  <p><strong>典型 Query：</strong></p>
+  <div class="case-box">
+    <div class="query-text">"南京能看到绝美夜景的酒店"</div>
+  </div>
+  <div class="case-box">
+    <div class="query-text">"去溧阳游玩推荐酒店"</div>
+  </div>
+  <div class="case-box">
+    <div class="query-text">"长隆横琴湾酒店适合什么人群"</div>
+  </div>
+
+  <p><strong>高频模式：</strong>"介绍下这个酒店"（4次）、"这个酒店叫什么"（2次）、"这家酒店怎么样"（2次） —— 大量"指代词+酒店"的模式说明用户从笔记/图片场景来</p>
+</div>
+
+<h3 id="s3-4">3.4 L2-2 路线规划（237 条，7.0%）</h3>
+
+<div class="scene-card">
+  <div class="scene-header">
+    <div class="scene-name">路线规划</div>
+    <div class="scene-stats">237 条 · 7.0% · 高置信 68%</div>
+  </div>
+  <div class="scene-def">规划具体游玩路线/路径顺序（非交通导航），侧重"玩的先后顺序"而非完整行程安排。</div>
+
+  <p><strong>典型 Query：</strong></p>
+  <div class="case-box">
+    <div class="query-text">"附近适合散步的小众路线"</div>
+  </div>
+  <div class="case-box">
+    <div class="query-text">"北京小众的Citywalk路线"</div>
+  </div>
+  <div class="case-box">
+    <div class="query-text">"湛江有烟火气的美食路线推荐"</div>
+  </div>
+
+  <p><strong>高频模式：</strong>"规划游玩路线"（5次）、"附近适合散步的小众路线"（4次）、Citywalk 路线（2次）</p>
+
+  <div class="boundary"><strong>易混淆边界</strong>：与 L2-1 — L2-2 不包含吃住安排，仅关注游玩景点先后顺序。与 L2-9（路线导航）— L2-2 侧重"玩的路线"，L2-9 侧重"交通怎么走"。</div>
+</div>
+
+<h3 id="s3-5">3.5 高频 Query 模式与笔记场景</h3>
+
+<table>
+  <thead><tr><th>L2 类别</th><th>高频模式</th><th>频次</th><th>洞察</th></tr></thead>
+  <tbody>
+    <tr><td><strong>L2-4 攻略内容理解</strong></td><td>"总结这篇游玩攻略"</td><td>7</td><td>用户看完笔记/视频后让 AI 做结构化总结</td></tr>
+    <tr><td>L2-1 综合行程规划</td><td>"规划游玩路线"</td><td>6</td><td>最通用的行程规划入口表达</td></tr>
+    <tr><td>L2-2 路线规划</td><td>"附近适合散步的小众路线"</td><td>4</td><td>本地探索 + 小众偏好</td></tr>
+    <tr><td>L2-4 攻略内容理解</td><td>"总结视频里的景点"</td><td>4</td><td>视频内容 → AI 提取关键信息</td></tr>
+    <tr><td>L2-7 住宿推荐</td><td>"介绍下这个酒店"</td><td>4</td><td>从笔记/图片场景发起的指代式提问</td></tr>
+    <tr><td>L2-4 攻略内容理解</td><td>"总结视频攻略"</td><td>3</td><td>—</td></tr>
+    <tr><td>L2-6 景点推荐</td><td>"上海本地人周末都去哪儿玩"</td><td>3</td><td>本地视角 + 周末场景</td></tr>
+    <tr><td>L2-5 目的地推荐</td><td>"推荐几个好玩的周末约会项目"</td><td>8</td><td>约会场景是目的地推荐的特殊入口</td></tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <strong>约 129 条 query 以笔记 JSON 格式开头</strong>（约 3.8%），集中在 L2-4（攻略理解）、L2-6（景点推荐）、L2-7（住宿推荐）三个类别。这种"<strong>先看笔记再提问</strong>"的模式是点点旅游场景的差异化能力 —— 搜索引擎不可能让用户"对着某篇攻略追问 AI"。
+</div>
+
+<!-- ========== 四、Session 深度 ========== -->
+<h2 id="s4">四、用户为什么在旅游场景聊得下去</h2>
+
+<h3 id="s4-1">4.1 轮次分布</h3>
 
 <div class="stats-grid">
   <div class="stat-card highlight">
@@ -602,7 +924,54 @@
   </tbody>
 </table>
 
-<h3 id="s3-2">3.2 和购物决策的对比：天壤之别</h3>
+<h3 id="s4-2">4.2 多轮 Session 演进案例</h3>
+
+<p>从标注数据中精选 3 个典型多轮 session，展示旅游对话的自然演进模式：</p>
+
+<div class="scene-card">
+  <div class="scene-header">
+    <div class="scene-name">案例 1：新疆亲子游 · 5 轮 · 行程规划→调整→细化</div>
+    <div class="scene-stats">L2-1 综合行程规划</div>
+  </div>
+  <div class="timeline">
+    <div class="timeline-item"><div class="turn-label">第 1 轮</div><div class="turn-content">"7月中旬新疆親子遊攻略" — 初始需求</div></div>
+    <div class="timeline-item"><div class="turn-label">第 2 轮</div><div class="turn-content">反馈阿勒泰不方便，取消该段行程 — <strong>否定式调整</strong></div></div>
+    <div class="timeline-item"><div class="turn-label">第 3 轮</div><div class="turn-content">确认 7.20 到喀什，请求详细规划喀什+庫車行程 — <strong>细化约束</strong></div></div>
+    <div class="timeline-item"><div class="turn-label">第 4 轮</div><div class="turn-content">纠正行程顺序，指出应先庫車後喀什 — <strong>用户有领域知识</strong></div></div>
+    <div class="timeline-item"><div class="turn-label">第 5 轮</div><div class="turn-content">请求具体行程路线及费用 — <strong>决策落地</strong></div></div>
+  </div>
+  <div class="callout good">典型的<strong>迭代式行程规划</strong>：提需求→否定不合理部分→补充约束→纠正细节→要最终方案。这正是 AI Chat 的核心价值 —— 搜索引擎做不到这种连续的需求细化。</div>
+</div>
+
+<div class="scene-card">
+  <div class="scene-header">
+    <div class="scene-name">案例 2：格聂徒步 · 4 轮 · 行程→住宿→景点扩展</div>
+    <div class="scene-stats">L2-7 住宿推荐</div>
+  </div>
+  <div class="timeline">
+    <div class="timeline-item"><div class="turn-label">第 1 轮</div><div class="turn-content">旅行社退费问题 — 非核心需求</div></div>
+    <div class="timeline-item"><div class="turn-label">第 2 轮</div><div class="turn-content">则巴村-夯达营地-格聂之眼的详细行程安排 — <strong>转入核心规划</strong></div></div>
+    <div class="timeline-item"><div class="turn-label">第 3 轮</div><div class="turn-content">"则巴村推荐的民宿" — <strong>行程→住宿</strong></div></div>
+    <div class="timeline-item"><div class="turn-label">第 4 轮</div><div class="turn-content">格聂游玩住则巴村的更多游玩地点推荐 — <strong>住宿→景点扩展</strong></div></div>
+  </div>
+  <div class="callout">自然的<strong>跨 L2 演进</strong>：行程安排 → 住宿推荐 → 景点扩展。用户的需求在对话中逐步展开，而非一次性提出。</div>
+</div>
+
+<div class="scene-card">
+  <div class="scene-header">
+    <div class="scene-name">案例 3：常州→上海→北京 · 4 轮 · 交通连续追问</div>
+    <div class="scene-stats">L2-10 交通票务</div>
+  </div>
+  <div class="timeline">
+    <div class="timeline-item"><div class="turn-label">第 1 轮</div><div class="turn-content">常州到上海虹桥的火车类型及市域铁路换乘</div></div>
+    <div class="timeline-item"><div class="turn-label">第 2 轮</div><div class="turn-content">上海浦东机场到北京航班的航站楼查询</div></div>
+    <div class="timeline-item"><div class="turn-label">第 3 轮</div><div class="turn-content">CA510 航班行李直挂问题</div></div>
+    <div class="timeline-item"><div class="turn-label">第 4 轮</div><div class="turn-content">确认 CA510 从浦东机场出发及中转信息</div></div>
+  </div>
+  <div class="callout">围绕<strong>同一次出行的交通链路</strong>的连续追问。每一轮都是前一轮结果的自然延伸 —— 这正是 Know 型需求在旅游场景中产生多轮的典型模式。</div>
+</div>
+
+<h3 id="s4-3">4.3 和购物决策的对比：天壤之别</h3>
 
 <table>
   <thead><tr><th>指标</th><th>旅游</th><th>购物决策</th><th>解读</th></tr></thead>
@@ -618,7 +987,56 @@
   <strong>旅游是 AIM 证明"多轮 AI Chat"价值的最佳场景</strong>。购物场景 80.5% 只有 2 轮，根因是购物决策可以在搜索结果中完成（看笔记评测即可）。旅游不行 —— "帮我规划 5 天行程"天然需要多轮交互来细化需求、调整方案。
 </div>
 
-<h3 id="s3-3">3.3 可能的解释</h3>
+<h3 id="s4-4">4.4 Query 长度与需求复杂度</h3>
+
+<p>不同 L1 大类的 query 长度特征（不含笔记 JSON 类 query）：</p>
+
+<table>
+  <thead><tr><th>L1 大类</th><th>平均长度</th><th>P50</th><th>P90</th><th>最大</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><strong>行程规划</strong></td>
+      <td class="mono" style="color:#EA4335">107</td>
+      <td class="mono">22</td>
+      <td class="mono">198</td>
+      <td class="mono">1,758</td>
+    </tr>
+    <tr>
+      <td><strong>目的地与景点</strong></td>
+      <td class="mono" style="color:#555">49</td>
+      <td class="mono">15</td>
+      <td class="mono">48</td>
+      <td class="mono">1,379</td>
+    </tr>
+    <tr>
+      <td><strong>吃住服务</strong></td>
+      <td class="mono" style="color:#555">53</td>
+      <td class="mono">16</td>
+      <td class="mono">61</td>
+      <td class="mono">1,123</td>
+    </tr>
+    <tr>
+      <td><strong>交通出行</strong></td>
+      <td class="mono" style="color:#555">27</td>
+      <td class="mono">16</td>
+      <td class="mono">42</td>
+      <td class="mono">1,078</td>
+    </tr>
+    <tr>
+      <td><strong>出行准备</strong></td>
+      <td class="mono" style="color:#555">26</td>
+      <td class="mono">16</td>
+      <td class="mono">50</td>
+      <td class="mono">492</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <strong>行程规划类 query 平均长度 107 字</strong>，是交通出行（27 字）的 4 倍 —— 用户一次性给出大量约束条件（出发地、天数、人数、预算、特殊需求），期望 AI 输出完整方案。P90 达 198 字说明有大量"超长需求描述"。交通出行类则简洁直接（"XX到XX多远"）。
+</div>
+
+<h3 id="s4-5">4.5 可能的解释</h3>
 
 <p><strong>为什么 22.6% 的旅游 session 只有 1 轮？</strong></p>
 <ul>
@@ -634,10 +1052,10 @@
   <li>这 15.5% 的用户是<strong>产品验证的核心</strong>：如果能让更多 1 轮用户转化成 10+轮用户，说明产品能力跟上了</li>
 </ul>
 
-<!-- ========== 四、能力和工具 ========== -->
-<h2 id="s4">四、AIM 的去哪玩能力用了多少</h2>
+<!-- ========== 五、能力和工具 ========== -->
+<h2 id="s5">五、AIM 的去哪玩能力用了多少</h2>
 
-<h3 id="s4-1">4.1 工具调用：数据盲区</h3>
+<h3 id="s5-1">5.1 工具调用：数据盲区</h3>
 
 <div class="callout bad">
   <strong>当前无法获取工具调用覆盖率数据</strong>。查了 5 张 aichat 相关表（answer_receive / answer_turn / query_send / query_turn / turn_assembled），没有独立的 tool_call / function_call 明细字段。唯一相关的 <code>skill_id</code> 字段 99.9% 为 NULL。<br><br>
@@ -657,7 +1075,7 @@
   </tbody>
 </table>
 
-<h3 id="s4-2">4.2 DR 攻略模式</h3>
+<h3 id="s5-2">5.2 DR 攻略模式</h3>
 
 <div class="stats-grid">
   <div class="stat-card">
@@ -686,8 +1104,8 @@
   DR 攻略模式是<strong>独立端 App 专属功能</strong>，渗透率 2.34% 处于平台期（7天内无明显增长）。考虑到主站贡献了旅游 67% 的流量，<strong>DR 攻略模式在主站的缺失是一个明显的能力缺口</strong>。
 </div>
 
-<!-- ========== 五、值得做 vs 不值得做 ========== -->
-<h2 id="s5">五、值得做什么，不值得做什么</h2>
+<!-- ========== 六、值得做 vs 不值得做 ========== -->
+<h2 id="s6">六、值得做什么，不值得做什么</h2>
 
 <h3>值得做</h3>
 <div class="case-box">
@@ -723,8 +1141,8 @@
   <p>DR 渗透率 2.34% 已平台期，主站未上线。旅游 67% 的流量来自主站 —— 优先在主站做好旅游体验，比优化独立端攻略模式的 ROI 更高。</p>
 </div>
 
-<!-- ========== 六、和执行文档的对照 ========== -->
-<h2 id="s6">六、和执行文档的对照</h2>
+<!-- ========== 七、和执行文档的对照 ========== -->
+<h2 id="s7">七、和执行文档的对照</h2>
 
 <p>逐条验证"去哪玩执行思路 7-8月一期"中的关键设想：</p>
 
@@ -769,8 +1187,39 @@
   </tbody>
 </table>
 
-<!-- ========== 七、数据局限 ========== -->
-<h2 id="s7">七、几个需要注意的数据局限</h2>
+<!-- ========== 八、对抗审查 ========== -->
+<h2 id="s8">八、对抗审查</h2>
+
+<p>对本报告核心结论的自我质疑和置信度评估：</p>
+
+<div class="audit-point">
+  <div class="audit-title">审查点 1：行程规划是核心需求（41.2%）—— 有多少是泛搜索？<span class="audit-label label-mid">中置信</span></div>
+  <p><strong>反驳</strong>：L2-1 中存在大量泛搜索 query（如"XX旅游攻略"），真实意图可能更接近景点推荐而非完整行程规划。暑期数据天然偏向行程规划。</p>
+  <p><strong>判断</strong>：部分成立。即使保守将 L2-1 中 20-30% 泛搜索移至 L2-6，行程规划大类仍是第一大需求（35%+）。季节性偏差是真实风险。</p>
+  <p><strong>置信度调整</strong>："行程规划是最大需求类别"<span class="audit-label label-high">高置信</span>，"综合行程规划占 24.9%"<span class="audit-label label-mid">中置信</span>（实际可能在 18-25% 之间）</p>
+</div>
+
+<div class="audit-point">
+  <div class="audit-title">审查点 2：多轮率 77.4% vs 另一份报告 90.6% 单轮 —— 口径差异<span class="audit-label label-high">高置信</span></div>
+  <p><strong>差异来源</strong>：77.4% 多轮率来自 dibp 大盘底表 <code>turn_assembled</code> 的 <code>max(turn_seq)</code>，包含 AI 追问产生的轮次。另一份报告的 90.6% 单轮是只数<strong>用户主动发出的 query 条数</strong>。两个口径都是事实，回答的是不同问题。</p>
+  <p><strong>判断</strong>：不矛盾。77.4% 说明"旅游场景的 AI 交互深度高"（含 AI 主动追问），90.6% 说明"大多数用户只主动发了 1 条 query"。前者反映产品能力，后者反映用户主动性。</p>
+  <p><strong>建议</strong>：两个数据都有价值。如果要衡量"用户是否愿意持续使用"，应以用户主动 query 数为准。</p>
+</div>
+
+<div class="audit-point">
+  <div class="audit-title">审查点 3：15.8% 非旅游 query 的影响<span class="audit-label label-high">高置信</span></div>
+  <p><strong>反驳</strong>：639 条非旅游 query（教育升学、体育赛事、追星行程、购物种草等）被标注为旅游，说明场景路由存在盲区。如果这些流量被路由到旅游 AI 能力，用户体验会受损。</p>
+  <p><strong>判断</strong>：对本报告分析结论<span class="audit-label label-high">不影响</span>（已排除），但对产品体验<span class="audit-label label-low">需关注</span>。</p>
+</div>
+
+<div class="audit-point">
+  <div class="audit-title">审查点 4：笔记 JSON query 是用户主动还是系统附带？<span class="audit-label label-mid">中置信</span></div>
+  <p><strong>反驳</strong>：约 129 条笔记 JSON query（3.8%）中需区分用户主动引用 vs 系统自动附带笔记内容。后者情况下"UGC 消费场景"可能被高估。</p>
+  <p><strong>判断</strong>：部分成立。但无论哪种情况，<strong>笔记消费场景中产生旅游需求是真实的</strong>，两者都说明联动价值。"笔记场景与 AI 对话有联动价值"<span class="audit-label label-high">高置信</span>，"用户主动从笔记发起 AI 咨询"<span class="audit-label label-mid">中置信</span>。</p>
+</div>
+
+<!-- ========== 九、数据局限 ========== -->
+<h2 id="s9">九、几个需要注意的数据局限</h2>
 
 <ol>
   <li><strong>43.9% 的 query 未被分类</strong> —— scene/intent 模型打标覆盖率仅 56.1%。旅游的真实占比可能高于或低于 3.68%，取决于未分类 query 中旅游的比例。</li>
@@ -780,7 +1229,8 @@
   <li><strong>AIO 旅游数据缺失</strong> —— search_keyword（PI4）权限今日失效，无法做 AIO→AIM 的转化分析。</li>
   <li><strong>工具调用数据缺失</strong> —— 无独立 tool_call 表，skill_id 99.9% 为 NULL。无法量化 search_request / note_read / opinion_aggregation 等工具的覆盖率。</li>
   <li><strong>query 抽样有限</strong> —— 热门目的地/主题分析基于 100 条随机抽样，存在统计偏差。结论需要全量分析验证。</li>
-  <li><strong>购物报告数据口径可能不同</strong> —— 本报告使用 dm_dots_query_distribution_detail_1d_di 表，购物报告可能使用不同底表，对比时需注意口径差异。</li>
+  <li><strong>L2 标注为 LLM 自动标注</strong> —— 抽样 20 条复核准确率约 95%，约 5% 分类偏差。非人工标注。</li>
+  <li><strong>多轮率口径差异</strong> —— 本报告使用 dibp 底表 turn_seq 口径（77.4% 多轮），与 query 级标注口径（90.6% 单轮）不同。详见对抗审查第 2 点。</li>
 </ol>
 
 <!-- ========== 行动建议优先级 ========== -->
@@ -849,7 +1299,7 @@
 <div class="separator"></div>
 
 <p style="color: #999; font-size: 12px; text-align: center;">
-  数据来源：dibp 平台 · 底表 redcdm.dm_dots_query_distribution_detail_1d_di + dwd_dots_aichat_* 系列<br>
+  数据来源：dibp 平台 · 底表 redcdm.dm_dots_query_distribution_detail_1d_di + dwd_dots_aichat_* 系列 + query 标注分析（3,396 session）<br>
   数据范围：2026/6/23-6/29（7天，is_initiative=1 主动 query）<br>
   报告生成：2026/7/3 · Claude Code
 </p>
